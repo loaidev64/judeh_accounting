@@ -18,12 +18,12 @@ final class CompanyController extends GetxController {
   final _descriptionTextController = TextEditingController();
 
   @override
-  InternalFinalCallback<void> get onDelete {
+  void onClose() {
     _idTextController.dispose();
     _nameTextController.dispose();
     _phoneNumberTextController.dispose();
     _descriptionTextController.dispose();
-    return super.onDelete;
+    super.onClose();
   }
 
   @override
@@ -57,18 +57,6 @@ final class CompanyController extends GetxController {
             child: Form(
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppTextFormField(
-                          label: 'المعرف',
-                          readonly: true,
-                        ),
-                      ),
-                      Spacer(),
-                    ],
-                  ),
-                  SizedBox(height: 5.h),
                   Row(
                     children: [
                       Expanded(
@@ -157,19 +145,6 @@ final class CompanyController extends GetxController {
             child: Form(
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppTextFormField(
-                          label: 'المعرف',
-                          readonly: true,
-                          controller: _idTextController,
-                        ),
-                      ),
-                      Spacer(),
-                    ],
-                  ),
-                  SizedBox(height: 5.h),
                   Row(
                     children: [
                       Expanded(

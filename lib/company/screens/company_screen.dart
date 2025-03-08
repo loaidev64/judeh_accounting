@@ -20,28 +20,10 @@ class _CompanyScreenState extends State<CompanyScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'الشركات',
-      bottomNavBar: Container(
-        color: Colors.white,
-        constraints: BoxConstraints(maxHeight: 75.h),
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
-        child: Row(
-          children: [
-            Expanded(
-              child: AppButton(
-                onTap: controller.edit,
-                text: 'التعديل على السطر',
-              ),
-            ),
-            SizedBox(width: 5.w),
-            Expanded(
-              child: AppButton(
-                onTap: controller.create,
-                text: 'إضافة شركة',
-                icon: 'assets/svgs/plus.svg',
-              ),
-            ),
-          ],
-        ),
+      bottomNavBar: AddEditBottomNavBar(
+        onAdd: controller.create,
+        onEdit: controller.edit,
+        resourceName: 'شركة',
       ),
       child: Obx(
         () => SliverPadding(
