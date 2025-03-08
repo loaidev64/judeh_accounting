@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 
 import '../theme/app_colors.dart';
@@ -14,12 +15,9 @@ class AppButton extends StatelessWidget {
     this.submit = false,
     this.icon,
     this.color = AppColors.primary,
-    this.loading = false,
   });
 
-  final bool loading;
-
-  final Function() onTap;
+  final Future<void> Function() onTap;
 
   final String text;
 
@@ -31,33 +29,41 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: loading ? null : onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(5.r),
-        ),
-        padding: EdgeInsets.symmetric(vertical: 10.h),
-        child: loading
-            ? AppLoading()
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    text,
-                    style: AppTextStyles.appButton,
-                  ),
-                  if (icon != null) ...[
-                    SizedBox(width: 10.w),
-                    SvgPicture.asset(
-                      icon!,
-                      height: 24.sp,
-                    ),
-                  ]
-                ],
+    return ObxValue(
+        (loading) => GestureDetector(
+              onTap: loading.value
+                  ? null
+                  : () async {
+                      loading.toggle();
+                      await onTap();
+                      loading.toggle();
+                    },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(5.r),
+                ),
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                child: loading.value
+                    ? AppLoading()
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            text,
+                            style: AppTextStyles.appButton,
+                          ),
+                          if (icon != null) ...[
+                            SizedBox(width: 10.w),
+                            SvgPicture.asset(
+                              icon!,
+                              height: 24.sp,
+                            ),
+                          ]
+                        ],
+                      ),
               ),
-      ),
-    );
+            ),
+        false.obs);
   }
 }

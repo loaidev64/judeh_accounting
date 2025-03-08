@@ -26,6 +26,16 @@ class Company extends DatabaseModel {
             : null,
       );
 
+  /// Factory constructor to create an empty [Company] object.
+  factory Company.empty() => Company(
+        id: 0,
+        name: '',
+        phoneNumber: null,
+        description: null,
+        createdAt: DateTime.now(),
+        updatedAt: null,
+      );
+
   /// Converts the [Company] object to a map for database storage.
   @override
   Map<String, Object?> get toDatabase => {

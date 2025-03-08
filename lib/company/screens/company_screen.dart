@@ -28,7 +28,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
           children: [
             Expanded(
               child: AppButton(
-                onTap: () => 0,
+                onTap: controller.edit,
                 text: 'التعديل على السطر',
               ),
             ),
@@ -54,6 +54,7 @@ class _CompanyScreenState extends State<CompanyScreen> {
                 Header(label: 'الرقم', width: 66.w),
                 Header(label: 'ملاحظات', width: 133.w),
               ],
+              onSelect: (index) => controller.selectedIndex = index,
               itemsCount: controller.companies.length,
               getData: (index) => [
                 controller.companies[index].id.toString(),

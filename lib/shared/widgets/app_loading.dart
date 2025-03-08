@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class AppLoading extends StatelessWidget {
   const AppLoading({super.key});
@@ -7,7 +6,9 @@ class AppLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: CircularProgressIndicator.adaptive(),
+      child: CircularProgressIndicator(
+        color: Colors.white,
+      ),
     );
   }
 }

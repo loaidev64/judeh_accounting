@@ -28,7 +28,7 @@ class AppTable extends StatefulWidget {
 }
 
 class _AppTableState extends State<AppTable> {
-  int _selectedIndex = 0;
+  int _selectedIndex = -1;
 
   @override
   Widget build(BuildContext context) {
