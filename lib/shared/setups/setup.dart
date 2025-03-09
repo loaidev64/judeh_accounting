@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../company/models/company.dart';
+import '../models/category.dart';
+import '../../material/models/material.dart';
 import '../database/migration.dart';
 // import 'package:csv/csv.dart';
 // import '/service/data_service.dart';

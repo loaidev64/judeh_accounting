@@ -11,6 +11,29 @@ const _migrations = <Migration>[
     updatedAt TEXT
 );
 '''),
+  Migration(tableName: Category.tableName, sql: '''
+  CREATE TABLE categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    type INTEGER,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT
+);
+'''),
+  Migration(tableName: Material.tableName, sql: '''
+CREATE TABLE materials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    cost REAL NOT NULL,
+    price REAL NOT NULL,
+    category_id INTEGER NOT NULL, -- New field: category_id (cannot be null)
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT,
+    FOREIGN KEY (category_id) REFERENCES categories(id) -- Optional foreign key constraint
+);
+''')
 ];
 
 Future<void> _setupDatabase() async {

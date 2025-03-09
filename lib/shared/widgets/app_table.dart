@@ -61,7 +61,7 @@ class _AppTableState extends State<AppTable> {
 
   Widget _columnHeader(Header header, BuildContext context) => Container(
         width: header.width,
-        margin: EdgeInsets.symmetric(horizontal: 2.w),
+        margin: EdgeInsets.symmetric(horizontal: 1.w),
         padding: EdgeInsets.symmetric(vertical: 5.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5.r),
@@ -109,7 +109,7 @@ class _AppTableState extends State<AppTable> {
           double width, String text, BuildContext context, bool selected) =>
       Container(
         width: width,
-        margin: EdgeInsets.symmetric(horizontal: 2.w),
+        margin: EdgeInsets.symmetric(horizontal: 1.w),
         padding: EdgeInsets.symmetric(vertical: 5.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5.r),

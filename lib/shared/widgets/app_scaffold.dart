@@ -28,14 +28,16 @@ class AppScaffold extends StatelessWidget {
             SliverPadding(
               padding: EdgeInsets.symmetric(vertical: 25.h, horizontal: 10.w),
               sliver: SliverAppBar(
-                leading: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(15.r),
-                    ),
-                    child: BackButton(
-                      color: Colors.white,
-                    )),
+                leading: !Navigator.of(context).canPop()
+                    ? null
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(15.r),
+                        ),
+                        child: BackButton(
+                          color: Colors.white,
+                        )),
                 // Provide a standard title.
                 title: Text(
                   title,

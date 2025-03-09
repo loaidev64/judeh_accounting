@@ -44,4 +44,11 @@ abstract interface class AppTextStyles {
     fontWeight: FontWeight.w500,
     color: Colors.white,
   );
+
+  static final appTab = TextStyle(
+    fontFamily: _appFontFamily,
+    fontSize: 18.sp,
+    fontWeight: FontWeight.w500,
+    color: Colors.white,
+  );
 }
