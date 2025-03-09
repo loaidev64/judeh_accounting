@@ -7,7 +7,7 @@ import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/widgets.dart';
-import '../models/category.dart';
+import '../../shared/models/category.dart';
 import '../models/material.dart' as m;
 
 enum Screen { material, category }
@@ -29,20 +29,19 @@ final class MaterialController extends GetxController {
   final _categoryIdTextController = TextEditingController();
   final _descriptionTextController = TextEditingController();
 
-  void _resetFields() {
-    // Reset selected indices
-    selectedMaterialIndex = -1;
-    selectedCategoryIndex = -1;
-
-    // Clear all text controllers
-    _idTextController.clear();
-    _nameTextController.clear();
-    _quantityTextController.clear();
-    _costTextController.clear();
-    _priceTextController.clear();
-    _categoryIdTextController.clear();
-    _descriptionTextController.clear();
-  }
+  // Constants for repeated values
+  static const _bottomSheetBorderRadius = BorderRadius.only(
+    topLeft: Radius.circular(15),
+    topRight: Radius.circular(15),
+  );
+  static const _bottomSheetBoxShadow = BoxShadow(
+    color: AppColors.primary,
+    offset: Offset(0, -10),
+  );
+  static const _bottomSheetPadding = EdgeInsets.symmetric(
+    horizontal: 10,
+    vertical: 10,
+  );
 
   @override
   void onInit() {
@@ -62,6 +61,21 @@ final class MaterialController extends GetxController {
     super.onClose();
   }
 
+  /// Resets all fields to their original values.
+  void _resetFields() {
+    selectedMaterialIndex = -1;
+    selectedCategoryIndex = -1;
+
+    _idTextController.clear();
+    _nameTextController.clear();
+    _quantityTextController.clear();
+    _costTextController.clear();
+    _priceTextController.clear();
+    _categoryIdTextController.clear();
+    _descriptionTextController.clear();
+  }
+
+  /// Changes the current page and fetches data accordingly.
   void changePage(Screen page) {
     currentPage.value = page;
     loading.value = true;
@@ -76,6 +90,7 @@ final class MaterialController extends GetxController {
     loading.value = false;
   }
 
+  /// Fetches materials from the database.
   void getMaterials([Category? category]) async {
     loading.value = true;
     final List<Map<String, Object?>> materials;
@@ -91,153 +106,55 @@ final class MaterialController extends GetxController {
     _resetFields();
   }
 
+  /// Fetches categories from the database.
   void getCategories() async {
     categories.value = await returnCategories();
     _resetFields();
   }
 
+  /// Returns a list of categories, optionally filtered by search.
   Future<List<Category>> returnCategories([String? search]) async {
     final List<Map<String, Object?>> categories;
     if (search == null) {
-      categories = await DatabaseHelper.getDatabase()
-          .query(Category.tableName, limit: 100);
+      categories = await DatabaseHelper.getDatabase().query(Category.tableName,
+          where: 'type = ?',
+          whereArgs: [CategoryType.material.index],
+          limit: 100);
     } else {
       categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: "name LIKE ?", whereArgs: ['%$search%'], limit: 100);
+          where: "name LIKE ? AND type = ?",
+          whereArgs: ['%$search%', CategoryType.material.index],
+          limit: 100);
     }
     return categories.map(Category.fromDatabase).toList();
   }
 
-  Future<void> createMaterial() async {
-    final material = m.Material.empty(); // Create an empty material
+  /// Opens a bottom sheet to create or edit a material.
+  Future<void> _showMaterialForm(m.Material material,
+      {bool isEditing = false}) async {
     await Get.bottomSheet(
       Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(15.r),
-            topRight: Radius.circular(15.r),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary,
-              offset: Offset(0, -10),
-            ),
-          ],
+          borderRadius: _bottomSheetBorderRadius,
+          boxShadow: [_bottomSheetBoxShadow],
         ),
         height: 500.h, // Increased height to accommodate more fields
         width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+        padding: _bottomSheetPadding,
         child: Material(
           child: Form(
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'الاسم',
-                        onSaved: (value) => material.name = value ?? '',
-                        isRequired: true,
-                      ),
-                    ),
-                  ],
-                ),
+                _buildNameField(material, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'الكمية',
-                        onSaved: (value) =>
-                            material.quantity = int.parse(value ?? '0'),
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    SizedBox(width: 5.w),
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'التكلفة',
-                        onSaved: (value) =>
-                            material.cost = double.parse(value ?? '0.0'),
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
+                _buildQuantityAndCostFields(material, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'السعر',
-                        onSaved: (value) =>
-                            material.price = double.parse(value ?? '0.0'),
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
+                _buildPriceField(material, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                TypeAheadField<Category>(
-                  suggestionsCallback: returnCategories,
-                  controller: _categoryIdTextController,
-                  builder: (context, controller, focusNode) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'التصنيف',
-                          style: AppTextStyles.appTextFormFieldLabel,
-                        ),
-                        TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          decoration: InputDecoration(
-                            border: AppTextFormField.border(),
-                            enabledBorder: AppTextFormField.border(),
-                            focusedBorder: AppTextFormField.border(),
-                            disabledBorder: AppTextFormField.border(),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                  emptyBuilder: (context) => Padding(
-                    padding: EdgeInsets.all(10.w),
-                    child: Text('لا يوجد أي نتائج'),
-                  ),
-                  itemBuilder: (context, category) {
-                    return ListTile(
-                      title: Text(category.name),
-                      subtitle: Text(category.description ?? ''),
-                    );
-                  },
-                  onSelected: (category) {
-                    material.categoryId = category.id;
-                    _categoryIdTextController.text = category.name;
-                  },
-                ),
+                _buildCategoryField(material, isEditing: isEditing),
                 SizedBox(height: 10.h),
-                Builder(builder: (context) {
-                  return AppButton(
-                    onTap: () async {
-                      if (Form.of(context).validate()) {
-                        Form.of(context).save();
-                        await DatabaseHelper.create(
-                          model: material,
-                          tableName: m.Material.tableName,
-                        );
-                        if (context.mounted) Navigator.of(context).pop();
-                      }
-                    },
-                    text: 'إضافة',
-                    icon: 'assets/svgs/plus.svg',
-                  );
-                }),
+                _buildActionButtons(material, isEditing: isEditing),
               ],
             ),
           ),
@@ -249,6 +166,173 @@ final class MaterialController extends GetxController {
     getMaterials(); // Refresh the materials list
   }
 
+  /// Builds the name field.
+  Widget _buildNameField(m.Material material, {bool isEditing = false}) {
+    return Row(
+      children: [
+        Expanded(
+          child: AppTextFormField(
+            label: 'الاسم',
+            onSaved: (value) => material.name = value ?? '',
+            isRequired: true,
+            controller: isEditing ? _nameTextController : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the quantity and cost fields.
+  Widget _buildQuantityAndCostFields(m.Material material,
+      {bool isEditing = false}) {
+    return Row(
+      children: [
+        Expanded(
+          child: AppTextFormField(
+            label: 'الكمية',
+            onSaved: (value) => material.quantity = int.parse(value ?? '0'),
+            isRequired: true,
+            keyboardType: TextInputType.number,
+            controller: isEditing ? _quantityTextController : null,
+          ),
+        ),
+        SizedBox(width: 5.w),
+        Expanded(
+          child: AppTextFormField(
+            label: 'التكلفة',
+            onSaved: (value) => material.cost = double.parse(value ?? '0.0'),
+            isRequired: true,
+            keyboardType: TextInputType.number,
+            controller: isEditing ? _costTextController : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the price field.
+  Widget _buildPriceField(m.Material material, {bool isEditing = false}) {
+    return Row(
+      children: [
+        Expanded(
+          child: AppTextFormField(
+            label: 'السعر',
+            onSaved: (value) => material.price = double.parse(value ?? '0.0'),
+            isRequired: true,
+            keyboardType: TextInputType.number,
+            controller: isEditing ? _priceTextController : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the category field using TypeAhead.
+  Widget _buildCategoryField(m.Material material, {bool isEditing = false}) {
+    return TypeAheadField<Category>(
+      suggestionsCallback: returnCategories,
+      controller: _categoryIdTextController,
+      builder: (context, controller, focusNode) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'التصنيف',
+              style: AppTextStyles.appTextFormFieldLabel,
+            ),
+            TextField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                border: AppTextFormField.border(),
+                enabledBorder: AppTextFormField.border(),
+                focusedBorder: AppTextFormField.border(),
+                disabledBorder: AppTextFormField.border(),
+              ),
+            ),
+          ],
+        );
+      },
+      emptyBuilder: (context) => Padding(
+        padding: EdgeInsets.all(10.w),
+        child: Text('لا يوجد أي نتائج'),
+      ),
+      itemBuilder: (context, category) {
+        return ListTile(
+          title: Text(category.name),
+          subtitle: Text(category.description ?? ''),
+        );
+      },
+      onSelected: (category) {
+        material.categoryId = category.id;
+        _categoryIdTextController.text = category.name;
+      },
+    );
+  }
+
+  /// Builds the action buttons (Add/Edit, Delete).
+  Widget _buildActionButtons(m.Material material, {bool isEditing = false}) {
+    return Row(
+      children: [
+        if (isEditing)
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                return AppButton(
+                  onTap: () async {
+                    await DatabaseHelper.delete(
+                      model: material,
+                      tableName: m.Material.tableName,
+                    );
+                    Get.back();
+                  },
+                  text: 'حذف',
+                  color: Colors.red,
+                  icon: 'assets/svgs/delete.svg',
+                );
+              },
+            ),
+          ),
+        if (isEditing) SizedBox(width: 5.w),
+        Expanded(
+          child: Builder(
+            builder: (context) {
+              return AppButton(
+                onTap: () async {
+                  if (Form.of(context).validate()) {
+                    Form.of(context).save();
+                    if (isEditing) {
+                      await DatabaseHelper.update(
+                        model: material,
+                        tableName: m.Material.tableName,
+                      );
+                    } else {
+                      await DatabaseHelper.create(
+                        model: material,
+                        tableName: m.Material.tableName,
+                      );
+                    }
+                    Get.back();
+                  }
+                },
+                text: isEditing ? 'تعديل' : 'إضافة',
+                icon:
+                    isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Opens a bottom sheet to create a new material.
+  Future<void> createMaterial() async {
+    final material = m.Material.empty();
+    await _showMaterialForm(material);
+  }
+
+  /// Opens a bottom sheet to edit an existing material.
   Future<void> editMaterial() async {
     if (selectedMaterialIndex < 0) {
       Get.snackbar(
@@ -275,241 +359,16 @@ final class MaterialController extends GetxController {
             whereArgs: [material.categoryId]))
         .first['name'] as String;
 
-    await Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(15.r),
-            topRight: Radius.circular(15.r),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary,
-              offset: Offset(0, -10),
-            ),
-          ],
-        ),
-        height: 500.h, // Increased height to accommodate more fields
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
-        child: Material(
-          child: Form(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'الاسم',
-                        onSaved: (value) => material.name = value ?? '',
-                        isRequired: true,
-                        controller: _nameTextController,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 5.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'الكمية',
-                        onSaved: (value) =>
-                            material.quantity = int.parse(value ?? '0'),
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                        controller: _quantityTextController,
-                      ),
-                    ),
-                    SizedBox(width: 5.w),
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'التكلفة',
-                        onSaved: (value) =>
-                            material.cost = double.parse(value ?? '0.0'),
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                        controller: _costTextController,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 5.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'السعر',
-                        onSaved: (value) =>
-                            material.price = double.parse(value ?? '0.0'),
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                        controller: _priceTextController,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 5.h),
-                TypeAheadField<Category>(
-                  suggestionsCallback: returnCategories,
-                  controller: _categoryIdTextController,
-                  builder: (context, controller, focusNode) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'التصنيف',
-                          style: AppTextStyles.appTextFormFieldLabel,
-                        ),
-                        TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          decoration: InputDecoration(
-                            border: AppTextFormField.border(),
-                            enabledBorder: AppTextFormField.border(),
-                            focusedBorder: AppTextFormField.border(),
-                            disabledBorder: AppTextFormField.border(),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                  emptyBuilder: (context) => Padding(
-                    padding: EdgeInsets.all(10.w),
-                    child: Text('لا يوجد أي نتائج'),
-                  ),
-                  itemBuilder: (context, category) {
-                    return ListTile(
-                      title: Text(category.name),
-                      subtitle: Text(category.description ?? ''),
-                    );
-                  },
-                  onSelected: (category) {
-                    material.categoryId = category.id;
-                    _categoryIdTextController.text = category.name;
-                  },
-                ),
-                SizedBox(height: 10.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Builder(builder: (context) {
-                        return AppButton(
-                          onTap: () async {
-                            await DatabaseHelper.delete(
-                              model: material,
-                              tableName: m.Material.tableName,
-                            );
-                            if (context.mounted) Navigator.of(context).pop();
-                          },
-                          text: 'حذف',
-                          color: Colors.red,
-                          icon: 'assets/svgs/delete.svg',
-                        );
-                      }),
-                    ),
-                    SizedBox(width: 5.w),
-                    Expanded(
-                      child: Builder(builder: (context) {
-                        return AppButton(
-                          onTap: () async {
-                            if (Form.of(context).validate()) {
-                              Form.of(context).save();
-                              await DatabaseHelper.update(
-                                model: material,
-                                tableName: m.Material.tableName,
-                              );
-                              if (context.mounted) Navigator.of(context).pop();
-                            }
-                          },
-                          text: 'تعديل',
-                          icon: 'assets/svgs/edit.svg',
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-    );
-
-    getMaterials(); // Refresh the materials list
+    await _showMaterialForm(material, isEditing: true);
   }
 
+  /// Opens a bottom sheet to create a new category.
   Future<void> createCategory() async {
-    final category = Category.empty(); // Create an empty category
-    await Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(15.r),
-            topRight: Radius.circular(15.r),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary,
-              offset: Offset(0, -10),
-            ),
-          ],
-        ),
-        height: 356.h,
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
-        child: Material(
-          child: Form(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'الاسم',
-                        onSaved: (value) => category.name = value ?? '',
-                        isRequired: true,
-                      ),
-                    ),
-                    Spacer(),
-                  ],
-                ),
-                SizedBox(height: 5.h),
-                AppTextFormField(
-                  label: 'ملاحظات',
-                  onSaved: (value) => category.description = value,
-                ),
-                SizedBox(height: 10.h),
-                Builder(builder: (context) {
-                  return AppButton(
-                    onTap: () async {
-                      if (Form.of(context).validate()) {
-                        Form.of(context).save();
-                        await DatabaseHelper.create(
-                          model: category,
-                          tableName: Category.tableName,
-                        );
-                        if (context.mounted) Navigator.of(context).pop();
-                      }
-                    },
-                    text: 'إضافة',
-                    icon: 'assets/svgs/plus.svg',
-                  );
-                }),
-              ],
-            ),
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-    );
-
-    getCategories(); // Refresh the categories list
+    final category = Category.empty(CategoryType.material);
+    await _showCategoryForm(category);
   }
 
+  /// Opens a bottom sheet to edit an existing category.
   Future<void> editCategory() async {
     if (selectedCategoryIndex < 0) {
       Get.snackbar(
@@ -528,87 +387,31 @@ final class MaterialController extends GetxController {
     _nameTextController.text = category.name;
     _descriptionTextController.text = category.description ?? '';
 
+    await _showCategoryForm(category, isEditing: true);
+  }
+
+  /// Opens a bottom sheet to create or edit a category.
+  Future<void> _showCategoryForm(Category category,
+      {bool isEditing = false}) async {
     await Get.bottomSheet(
       Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(15.r),
-            topRight: Radius.circular(15.r),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary,
-              offset: Offset(0, -10),
-            ),
-          ],
+          borderRadius: _bottomSheetBorderRadius,
+          boxShadow: [_bottomSheetBoxShadow],
         ),
         height: 356.h,
         width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+        padding: _bottomSheetPadding,
         child: Material(
           child: Form(
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextFormField(
-                        label: 'الاسم',
-                        onSaved: (value) => category.name = value ?? '',
-                        isRequired: true,
-                        controller: _nameTextController,
-                      ),
-                    ),
-                    Spacer(),
-                  ],
-                ),
+                _buildCategoryNameField(category, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                AppTextFormField(
-                  label: 'ملاحظات',
-                  onSaved: (value) => category.description = value,
-                  controller: _descriptionTextController,
-                ),
+                _buildCategoryDescriptionField(category, isEditing: isEditing),
                 SizedBox(height: 10.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Builder(builder: (context) {
-                        return AppButton(
-                          onTap: () async {
-                            await DatabaseHelper.delete(
-                              model: category,
-                              tableName: Category.tableName,
-                            );
-                            if (context.mounted) Navigator.of(context).pop();
-                          },
-                          text: 'حذف',
-                          color: Colors.red,
-                          icon: 'assets/svgs/delete.svg',
-                        );
-                      }),
-                    ),
-                    SizedBox(width: 5.w),
-                    Expanded(
-                      child: Builder(builder: (context) {
-                        return AppButton(
-                          onTap: () async {
-                            if (Form.of(context).validate()) {
-                              Form.of(context).save();
-                              await DatabaseHelper.update(
-                                model: category,
-                                tableName: Category.tableName,
-                              );
-                              if (context.mounted) Navigator.of(context).pop();
-                            }
-                          },
-                          text: 'تعديل',
-                          icon: 'assets/svgs/edit.svg',
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                _buildCategoryActionButtons(category, isEditing: isEditing),
               ],
             ),
           ),
@@ -618,5 +421,89 @@ final class MaterialController extends GetxController {
     );
 
     getCategories(); // Refresh the categories list
+  }
+
+  /// Builds the category name field.
+  Widget _buildCategoryNameField(Category category, {bool isEditing = false}) {
+    return Row(
+      children: [
+        Expanded(
+          child: AppTextFormField(
+            label: 'الاسم',
+            onSaved: (value) => category.name = value ?? '',
+            isRequired: true,
+            controller: isEditing ? _nameTextController : null,
+          ),
+        ),
+        Spacer(),
+      ],
+    );
+  }
+
+  /// Builds the category description field.
+  Widget _buildCategoryDescriptionField(Category category,
+      {bool isEditing = false}) {
+    return AppTextFormField(
+      label: 'ملاحظات',
+      onSaved: (value) => category.description = value,
+      controller: isEditing ? _descriptionTextController : null,
+    );
+  }
+
+  /// Builds the category action buttons (Add/Edit, Delete).
+  Widget _buildCategoryActionButtons(Category category,
+      {bool isEditing = false}) {
+    return Row(
+      children: [
+        if (isEditing)
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                return AppButton(
+                  onTap: () async {
+                    await DatabaseHelper.delete(
+                      model: category,
+                      tableName: Category.tableName,
+                    );
+                    Get.back();
+                  },
+                  text: 'حذف',
+                  color: Colors.red,
+                  icon: 'assets/svgs/delete.svg',
+                );
+              },
+            ),
+          ),
+        if (isEditing) SizedBox(width: 5.w),
+        Expanded(
+          child: Builder(
+            builder: (context) {
+              return AppButton(
+                onTap: () async {
+                  if (Form.of(context).validate()) {
+                    Form.of(context).save();
+                    if (isEditing) {
+                      await DatabaseHelper.update(
+                        model: category,
+                        tableName: Category.tableName,
+                      );
+                    } else {
+                      await DatabaseHelper.create(
+                        model: category,
+                        tableName: Category.tableName,
+                      );
+                    }
+                    Get.back();
+                  }
+                },
+                text: isEditing ? 'تعديل' : 'إضافة',
+                icon:
+                    isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }

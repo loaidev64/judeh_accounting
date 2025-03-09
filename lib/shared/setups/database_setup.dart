@@ -16,6 +16,7 @@ const _migrations = <Migration>[
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
+    type INTEGER,
     createdAt TEXT NOT NULL,
     updatedAt TEXT
 );
