@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../company/models/company.dart';
 import '../../expense/models/expense.dart';
+import '../../order/models/order.dart';
 import '../category/models/category.dart';
 import '../../material/models/material.dart';
 import '../database/migration.dart';

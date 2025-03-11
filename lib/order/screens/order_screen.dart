@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/order/controllers/order_controller.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
 class OrderScreen extends StatefulWidget {
@@ -12,7 +13,7 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  final controller = Get.put();
+  final controller = Get.put(OrderController());
 
   @override
   Widget build(BuildContext context) {

@@ -45,6 +45,18 @@ CREATE TABLE expenses (
       FOREIGN KEY (category_id) REFERENCES categories(id)
     );
 '''),
+  Migration(tableName: Order.tableName, sql: '''
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    customer_id INTEGER,
+    company_id INTEGER,
+    type INTEGER NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+'''),
 ];
 
 Future<void> _setupDatabase() async {
