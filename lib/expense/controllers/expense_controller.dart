@@ -136,11 +136,11 @@ final class ExpenseController extends GetxController {
           child: Form(
             child: Column(
               children: [
+                _buildCategoryField(expense, isEditing: isEditing),
+                SizedBox(height: 5.h),
                 _buildCostField(expense, isEditing: isEditing),
                 SizedBox(height: 5.h),
                 _buildDescriptionField(expense, isEditing: isEditing),
-                SizedBox(height: 5.h),
-                _buildCategoryField(expense, isEditing: isEditing),
                 SizedBox(height: 10.h),
                 _buildActionButtons(expense, isEditing: isEditing),
               ],

@@ -146,13 +146,13 @@ final class MaterialController extends GetxController {
           child: Form(
             child: Column(
               children: [
-                _buildNameField(material, isEditing: isEditing),
+                _buildCategoryField(material, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                _buildQuantityAndCostFields(material, isEditing: isEditing),
+                _buildNameField(material, isEditing: isEditing),
                 SizedBox(height: 5.h),
                 _buildPriceField(material, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                _buildCategoryField(material, isEditing: isEditing),
+                _buildQuantityAndCostFields(material, isEditing: isEditing),
                 SizedBox(height: 10.h),
                 _buildActionButtons(material, isEditing: isEditing),
               ],
