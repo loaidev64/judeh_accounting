@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:judeh_accounting/shared/theme/app_info.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -10,7 +11,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'الصفحة الرئيسية',
+      title: AppInfo.fullAppName,
       child: SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: 10.w),
         sliver: SliverAnimatedGrid(

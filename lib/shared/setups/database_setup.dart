@@ -33,7 +33,18 @@ CREATE TABLE materials (
     updatedAt TEXT,
     FOREIGN KEY (category_id) REFERENCES categories(id) -- Optional foreign key constraint
 );
-''')
+'''),
+  Migration(tableName: Expense.tableName, sql: '''
+CREATE TABLE expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      cost REAL NOT NULL,
+      description TEXT,
+      category_id INTEGER NOT NULL,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT,
+      FOREIGN KEY (category_id) REFERENCES categories(id)
+    );
+'''),
 ];
 
 Future<void> _setupDatabase() async {

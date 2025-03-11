@@ -1,4 +1,4 @@
-import 'database_model.dart';
+import '../../models/database_model.dart';
 
 class Category extends DatabaseModel {
   String name;
