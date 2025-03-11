@@ -8,26 +8,23 @@ import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/widgets.dart';
 import '../../shared/category/models/category.dart';
-import '../models/material.dart' as m;
+import '../models/expense.dart';
 
-enum Screen { material, category }
+enum Screen { expense, category }
 
-final class MaterialController extends GetxController {
-  final currentPage = Screen.material.obs;
-  final materials = <m.Material>[].obs;
+final class ExpenseController extends GetxController {
+  final currentPage = Screen.expense.obs;
+  final expenses = <Expense>[].obs;
   final categories = <Category>[].obs;
   final loading = false.obs;
 
-  int selectedMaterialIndex = -1; // Track selected material for editing
+  int selectedExpenseIndex = -1; // Track selected expense for editing
   int selectedCategoryIndex = -1; // Track selected category for editing
 
-  final _idTextController = TextEditingController();
   final _nameTextController = TextEditingController();
-  final _quantityTextController = TextEditingController();
   final _costTextController = TextEditingController();
-  final _priceTextController = TextEditingController();
-  final _categoryIdTextController = TextEditingController();
   final _descriptionTextController = TextEditingController();
+  final _categoryIdTextController = TextEditingController();
 
   // Constants for repeated values
   static const _bottomSheetBorderRadius = BorderRadius.only(
@@ -45,34 +42,27 @@ final class MaterialController extends GetxController {
 
   @override
   void onInit() {
-    getMaterials();
+    getExpenses();
     super.onInit();
   }
 
   @override
   void onClose() {
-    _idTextController.dispose();
-    _nameTextController.dispose();
-    _quantityTextController.dispose();
     _costTextController.dispose();
-    _priceTextController.dispose();
-    _categoryIdTextController.dispose();
     _descriptionTextController.dispose();
+    _categoryIdTextController.dispose();
     super.onClose();
   }
 
   /// Resets all fields to their original values.
   void _resetFields() {
-    selectedMaterialIndex = -1;
+    selectedExpenseIndex = -1;
     selectedCategoryIndex = -1;
 
-    _idTextController.clear();
-    _nameTextController.clear();
-    _quantityTextController.clear();
     _costTextController.clear();
-    _priceTextController.clear();
-    _categoryIdTextController.clear();
     _descriptionTextController.clear();
+    _categoryIdTextController.clear();
+    _nameTextController.clear();
   }
 
   /// Changes the current page and fetches data accordingly.
@@ -80,8 +70,8 @@ final class MaterialController extends GetxController {
     currentPage.value = page;
     loading.value = true;
     switch (page) {
-      case Screen.material:
-        getMaterials();
+      case Screen.expense:
+        getExpenses();
         break;
       default:
         getCategories();
@@ -90,18 +80,18 @@ final class MaterialController extends GetxController {
     loading.value = false;
   }
 
-  /// Fetches materials from the database.
-  void getMaterials([Category? category]) async {
+  /// Fetches expenses from the database.
+  void getExpenses([Category? category]) async {
     loading.value = true;
-    final List<Map<String, Object?>> materials;
+    final List<Map<String, Object?>> expenses;
     if (category == null) {
-      materials = await DatabaseHelper.getDatabase()
-          .query(m.Material.tableName, limit: 100);
+      expenses = await DatabaseHelper.getDatabase()
+          .query(Expense.tableName, limit: 100);
     } else {
-      materials = await DatabaseHelper.getDatabase().query(m.Material.tableName,
+      expenses = await DatabaseHelper.getDatabase().query(Expense.tableName,
           where: 'category_id = ?', whereArgs: [category.id], limit: 100);
     }
-    this.materials.value = materials.map(m.Material.fromDatabase).toList();
+    this.expenses.value = expenses.map(Expense.fromDatabase).toList();
     loading.value = false;
     _resetFields();
   }
@@ -118,19 +108,19 @@ final class MaterialController extends GetxController {
     if (search == null) {
       categories = await DatabaseHelper.getDatabase().query(Category.tableName,
           where: 'type = ?',
-          whereArgs: [CategoryType.material.index],
+          whereArgs: [CategoryType.expense.index],
           limit: 100);
     } else {
       categories = await DatabaseHelper.getDatabase().query(Category.tableName,
           where: "name LIKE ? AND type = ?",
-          whereArgs: ['%$search%', CategoryType.material.index],
+          whereArgs: ['%$search%', CategoryType.expense.index],
           limit: 100);
     }
     return categories.map(Category.fromDatabase).toList();
   }
 
-  /// Opens a bottom sheet to create or edit a material.
-  Future<void> _showMaterialForm(m.Material material,
+  /// Opens a bottom sheet to create or edit an expense.
+  Future<void> _showExpenseForm(Expense expense,
       {bool isEditing = false}) async {
     await Get.bottomSheet(
       Container(
@@ -139,22 +129,20 @@ final class MaterialController extends GetxController {
           borderRadius: _bottomSheetBorderRadius,
           boxShadow: [_bottomSheetBoxShadow],
         ),
-        height: 500.h, // Increased height to accommodate more fields
+        height: 400.h, // Adjusted height for expense fields
         width: double.infinity,
         padding: _bottomSheetPadding,
         child: Material(
           child: Form(
             child: Column(
               children: [
-                _buildCategoryField(material, isEditing: isEditing),
+                _buildCategoryField(expense, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                _buildNameField(material, isEditing: isEditing),
+                _buildCostField(expense, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                _buildPriceField(material, isEditing: isEditing),
-                SizedBox(height: 5.h),
-                _buildQuantityAndCostFields(material, isEditing: isEditing),
+                _buildDescriptionField(expense, isEditing: isEditing),
                 SizedBox(height: 10.h),
-                _buildActionButtons(material, isEditing: isEditing),
+                _buildActionButtons(expense, isEditing: isEditing),
               ],
             ),
           ),
@@ -163,44 +151,17 @@ final class MaterialController extends GetxController {
       isScrollControlled: true,
     );
 
-    getMaterials(); // Refresh the materials list
+    getExpenses(); // Refresh the expenses list
   }
 
-  /// Builds the name field.
-  Widget _buildNameField(m.Material material, {bool isEditing = false}) {
+  /// Builds the cost field.
+  Widget _buildCostField(Expense expense, {bool isEditing = false}) {
     return Row(
       children: [
-        Expanded(
-          child: AppTextFormField(
-            label: 'الاسم',
-            onSaved: (value) => material.name = value ?? '',
-            isRequired: true,
-            controller: isEditing ? _nameTextController : null,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Builds the quantity and cost fields.
-  Widget _buildQuantityAndCostFields(m.Material material,
-      {bool isEditing = false}) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppTextFormField(
-            label: 'الكمية',
-            onSaved: (value) => material.quantity = int.parse(value ?? '0'),
-            isRequired: true,
-            keyboardType: TextInputType.number,
-            controller: isEditing ? _quantityTextController : null,
-          ),
-        ),
-        SizedBox(width: 5.w),
         Expanded(
           child: AppTextFormField(
             label: 'التكلفة',
-            onSaved: (value) => material.cost = double.parse(value ?? '0.0'),
+            onSaved: (value) => expense.cost = double.parse(value ?? '0.0'),
             isRequired: true,
             keyboardType: TextInputType.number,
             controller: isEditing ? _costTextController : null,
@@ -210,25 +171,17 @@ final class MaterialController extends GetxController {
     );
   }
 
-  /// Builds the price field.
-  Widget _buildPriceField(m.Material material, {bool isEditing = false}) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppTextFormField(
-            label: 'السعر',
-            onSaved: (value) => material.price = double.parse(value ?? '0.0'),
-            isRequired: true,
-            keyboardType: TextInputType.number,
-            controller: isEditing ? _priceTextController : null,
-          ),
-        ),
-      ],
+  /// Builds the description field.
+  Widget _buildDescriptionField(Expense expense, {bool isEditing = false}) {
+    return AppTextFormField(
+      label: 'ملاحظات',
+      onSaved: (value) => expense.description = value,
+      controller: isEditing ? _descriptionTextController : null,
     );
   }
 
   /// Builds the category field using TypeAhead.
-  Widget _buildCategoryField(m.Material material, {bool isEditing = false}) {
+  Widget _buildCategoryField(Expense expense, {bool isEditing = false}) {
     return TypeAheadField<Category>(
       suggestionsCallback: returnCategories,
       controller: _categoryIdTextController,
@@ -264,14 +217,14 @@ final class MaterialController extends GetxController {
         );
       },
       onSelected: (category) {
-        material.categoryId = category.id;
+        expense.categoryId = category.id;
         _categoryIdTextController.text = category.name;
       },
     );
   }
 
   /// Builds the action buttons (Add/Edit, Delete).
-  Widget _buildActionButtons(m.Material material, {bool isEditing = false}) {
+  Widget _buildActionButtons(Expense expense, {bool isEditing = false}) {
     return Row(
       children: [
         if (isEditing)
@@ -281,8 +234,8 @@ final class MaterialController extends GetxController {
                 return AppButton(
                   onTap: () async {
                     await DatabaseHelper.delete(
-                      model: material,
-                      tableName: m.Material.tableName,
+                      model: expense,
+                      tableName: Expense.tableName,
                     );
                     Get.back();
                   },
@@ -303,13 +256,13 @@ final class MaterialController extends GetxController {
                     Form.of(context).save();
                     if (isEditing) {
                       await DatabaseHelper.update(
-                        model: material,
-                        tableName: m.Material.tableName,
+                        model: expense,
+                        tableName: Expense.tableName,
                       );
                     } else {
                       await DatabaseHelper.create(
-                        model: material,
-                        tableName: m.Material.tableName,
+                        model: expense,
+                        tableName: Expense.tableName,
                       );
                     }
                     Get.back();
@@ -326,18 +279,18 @@ final class MaterialController extends GetxController {
     );
   }
 
-  /// Opens a bottom sheet to create a new material.
-  Future<void> createMaterial() async {
-    final material = m.Material.empty();
-    await _showMaterialForm(material);
+  /// Opens a bottom sheet to create a new expense.
+  Future<void> createExpense() async {
+    final expense = Expense.empty();
+    await _showExpenseForm(expense);
   }
 
-  /// Opens a bottom sheet to edit an existing material.
-  Future<void> editMaterial() async {
-    if (selectedMaterialIndex < 0) {
+  /// Opens a bottom sheet to edit an existing expense.
+  Future<void> editExpense() async {
+    if (selectedExpenseIndex < 0) {
       Get.snackbar(
         'تحذير',
-        'يجب عليك أولاً اختيار مادة',
+        'يجب عليك أولاً اختيار مصروف',
         colorText: Colors.white,
         backgroundColor: Colors.red,
         snackPosition: SnackPosition.BOTTOM,
@@ -346,25 +299,22 @@ final class MaterialController extends GetxController {
       return;
     }
 
-    final material = materials[selectedMaterialIndex];
-    _idTextController.text = material.id.toString();
-    _nameTextController.text = material.name;
-    _quantityTextController.text = material.quantity.toString();
-    _costTextController.text = material.cost.toString();
-    _priceTextController.text = material.price.toString();
+    final expense = expenses[selectedExpenseIndex];
+    _costTextController.text = expense.cost.toString();
+    _descriptionTextController.text = expense.description ?? '';
     _categoryIdTextController.text = (await DatabaseHelper.getDatabase().query(
             Category.tableName,
             columns: ['name'],
             where: 'id = ?',
-            whereArgs: [material.categoryId]))
+            whereArgs: [expense.categoryId]))
         .first['name'] as String;
 
-    await _showMaterialForm(material, isEditing: true);
+    await _showExpenseForm(expense, isEditing: true);
   }
 
   /// Opens a bottom sheet to create a new category.
   Future<void> createCategory() async {
-    final category = Category.empty(CategoryType.material);
+    final category = Category.empty(CategoryType.expense);
     await _showCategoryForm(category);
   }
 
@@ -383,8 +333,7 @@ final class MaterialController extends GetxController {
     }
 
     final category = categories[selectedCategoryIndex];
-    _idTextController.text = category.id.toString();
-    _nameTextController.text = category.name;
+    _nameTextController.text = category.name.toString();
     _descriptionTextController.text = category.description ?? '';
 
     await _showCategoryForm(category, isEditing: true);

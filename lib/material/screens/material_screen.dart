@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
-import 'package:judeh_accounting/shared/models/category.dart';
+import 'package:judeh_accounting/shared/category/models/category.dart';
+import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
 import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
@@ -66,52 +67,9 @@ class _MaterialScreenState extends State<MaterialScreen> {
                     : controller.currentPage.value == Screen.material
                         ? Column(
                             children: [
-                              TypeAheadField<Category>(
-                                suggestionsCallback:
-                                    controller.returnCategories,
-                                controller: categoryController,
-                                builder: (context, controller, focusNode) {
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'التصنيف',
-                                        style:
-                                            AppTextStyles.appTextFormFieldLabel,
-                                      ),
-                                      TextField(
-                                        controller: controller,
-                                        focusNode: focusNode,
-                                        // autofocus: true,
-                                        decoration: InputDecoration(
-                                          border: AppTextFormField.border(),
-                                          enabledBorder:
-                                              AppTextFormField.border(),
-                                          focusedBorder:
-                                              AppTextFormField.border(),
-                                          disabledBorder:
-                                              AppTextFormField.border(),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                                emptyBuilder: (context) => Padding(
-                                  padding: EdgeInsets.all(10.w),
-                                  child: Text('لا يوجد أي نتائج'),
-                                ),
-                                itemBuilder: (context, category) {
-                                  return ListTile(
-                                    title: Text(category.name),
-                                    subtitle: Text(category.description ?? ''),
-                                  );
-                                },
-                                onSelected: (category) {
-                                  categoryController.text = category.name;
-                                  controller.getMaterials(category);
-                                },
-                              ),
+                              CategorySearch(
+                                  onSearch: controller.returnCategories,
+                                  onSelected: controller.getMaterials),
                               SizedBox(height: 5.h),
                               AppTable(
                                 headers: [
