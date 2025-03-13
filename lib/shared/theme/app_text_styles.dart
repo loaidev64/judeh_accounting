@@ -51,4 +51,24 @@ abstract interface class AppTextStyles {
     fontWeight: FontWeight.w500,
     color: Colors.white,
   );
+
+  static final orderCardTotal = TextStyle(
+    fontFamily: _appFontFamily,
+    fontSize: 10.sp,
+    fontWeight: FontWeight.w500,
+    color: Colors.white,
+  );
+
+  static final orderCardDateTime = TextStyle(
+    fontFamily: _appFontFamily,
+    fontSize: 13.sp,
+    color: AppColors.orange,
+  );
+
+  static final orderCardId = TextStyle(
+    fontFamily: _appFontFamily,
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w500,
+    color: Colors.white,
+  );
 }

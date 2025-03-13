@@ -17,7 +17,7 @@ class AppButton extends StatelessWidget {
     this.color = AppColors.primary,
   });
 
-  final Future<void> Function() onTap;
+  final Future<void> Function()? onTap;
 
   final String text;
 
@@ -35,7 +35,7 @@ class AppButton extends StatelessWidget {
                   ? null
                   : () async {
                       loading.toggle();
-                      await onTap();
+                      await onTap?.call();
                       loading.toggle();
                     },
               child: Container(

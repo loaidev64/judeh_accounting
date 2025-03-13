@@ -25,10 +25,11 @@ const _migrations = <Migration>[
 CREATE TABLE materials (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     name TEXT NOT NULL,
-    quantity INTEGER NOT NULL,
+    quantity REAL NOT NULL,
     cost REAL NOT NULL,
     price REAL NOT NULL,
     category_id INTEGER NOT NULL, -- New field: category_id (cannot be null)
+    unit INTEGER NOT NULL,
     createdAt TEXT NOT NULL,
     updatedAt TEXT,
     FOREIGN KEY (category_id) REFERENCES categories(id) -- Optional foreign key constraint
@@ -51,10 +52,24 @@ CREATE TABLE orders (
     customer_id INTEGER,
     company_id INTEGER,
     type INTEGER NOT NULL,
+    total REAL NOT NULL,
     createdAt TEXT NOT NULL,
     updatedAt TEXT,
     FOREIGN KEY (customer_id) REFERENCES customers(id),
     FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+'''),
+  Migration(tableName: OrderItem.tableName, sql: '''
+CREATE TABLE order_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    material_id INTEGER NOT NULL,
+    price REAL NOT NULL,
+    quantity REAL NOT NULL,
+    order_id INTEGER NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT,
+    FOREIGN KEY (material_id) REFERENCES materials(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 '''),
 ];

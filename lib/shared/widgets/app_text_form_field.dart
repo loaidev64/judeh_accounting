@@ -15,6 +15,8 @@ class AppTextFormField extends StatelessWidget {
     this.validator,
     this.isRequired = false,
     this.keyboardType,
+    this.suffix,
+    this.counter,
   });
 
   final TextEditingController? controller;
@@ -30,6 +32,10 @@ class AppTextFormField extends StatelessWidget {
   final String? Function(String?)? validator;
 
   final TextInputType? keyboardType;
+
+  final Widget? suffix;
+
+  final Widget? counter;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +64,8 @@ class AppTextFormField extends StatelessWidget {
           style: AppTextStyles.appTextFormFieldText
               .copyWith(color: readonly ? AppColors.orange : AppColors.primary),
           decoration: InputDecoration(
+            suffix: suffix,
+            counter: counter,
             border: border(),
             enabledBorder: border(),
             focusedBorder: border(),

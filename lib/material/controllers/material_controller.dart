@@ -190,7 +190,7 @@ final class MaterialController extends GetxController {
         Expanded(
           child: AppTextFormField(
             label: 'الكمية',
-            onSaved: (value) => material.quantity = int.parse(value ?? '0'),
+            onSaved: (value) => material.quantity = double.parse(value ?? '0'),
             isRequired: true,
             keyboardType: TextInputType.number,
             controller: isEditing ? _quantityTextController : null,
