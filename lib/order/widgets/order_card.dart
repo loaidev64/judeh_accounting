@@ -13,9 +13,18 @@ class OrderCard extends StatelessWidget {
   const OrderCard({
     super.key,
     required this.order,
+    this.borderColor = AppColors.primary,
+    this.onSelect,
+    this.height,
   });
 
   final Order order;
+
+  final Color borderColor;
+
+  final void Function(int)? onSelect;
+
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +34,9 @@ class OrderCard extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15.r),
-                  border: Border.all(color: AppColors.primary, width: 3),
+                  border: Border.all(color: borderColor, width: 3),
                 ),
-                height: 178.h,
+                height: height ?? 178.h,
                 padding: EdgeInsets.all(5),
                 margin: EdgeInsets.only(bottom: 5.h),
                 child: SingleChildScrollView(
@@ -41,6 +50,7 @@ class OrderCard extends StatelessWidget {
                           Header(label: 'التفاصيل', width: 187.w),
                           Header(label: 'السعر', width: 70.w),
                         ],
+                        onSelect: onSelect,
                         itemsCount: order.items.length,
                         getData: (index) => [
                           (index + 1).toString(),
@@ -79,7 +89,7 @@ class OrderCard extends StatelessWidget {
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(15.r),
       ),
-      padding: EdgeInsets.only(bottom: 10.h),
+      padding: EdgeInsets.all(10.h),
       child: Center(
         child: Column(
           children: [

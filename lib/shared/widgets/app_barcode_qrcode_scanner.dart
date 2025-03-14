@@ -26,7 +26,7 @@ class _AppBarcodeQrcodeScannerState extends State<AppBarcodeQrcodeScanner> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 250.h,
+      height: 150.h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15.r),
       ),

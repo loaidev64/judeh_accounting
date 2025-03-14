@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:judeh_accounting/shared/extensions/double.dart';
 
 import '../../shared/models/database_model.dart';
@@ -63,4 +64,23 @@ class OrderItem extends DatabaseModel {
 
   String get description =>
       '$materialName\n${price.toPriceString} X ${quantity.toInt()}';
+
+  OrderItem copyWith({
+    int? materialId,
+    String? materialName,
+    double? price,
+    double? quantity,
+    int? orderId,
+  }) {
+    return OrderItem(
+      materialId: materialId ?? this.materialId,
+      materialName: materialName ?? this.materialName,
+      price: price ?? this.price,
+      quantity: quantity ?? this.quantity,
+      orderId: orderId ?? this.orderId,
+    );
+  }
+
+  OrderItem increaseQuantity({double by = 1}) =>
+      copyWith(quantity: quantity + by);
 }

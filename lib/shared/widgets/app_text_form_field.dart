@@ -17,6 +17,7 @@ class AppTextFormField extends StatelessWidget {
     this.keyboardType,
     this.suffix,
     this.counter,
+    this.autofocus = false,
   });
 
   final TextEditingController? controller;
@@ -26,6 +27,8 @@ class AppTextFormField extends StatelessWidget {
   final bool readonly;
 
   final bool isRequired;
+
+  final bool autofocus;
 
   final void Function(String? value)? onSaved;
 
@@ -48,6 +51,7 @@ class AppTextFormField extends StatelessWidget {
         ),
         TextFormField(
           keyboardType: keyboardType,
+          autocorrect: autofocus,
           validator: (value) {
             if (!isRequired) {
               return validator?.call(value);
