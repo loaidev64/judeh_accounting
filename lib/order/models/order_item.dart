@@ -1,4 +1,4 @@
-import 'package:judeh_accounting/shared/extensions/price_double.dart';
+import 'package:judeh_accounting/shared/extensions/double.dart';
 
 import '../../shared/models/database_model.dart';
 

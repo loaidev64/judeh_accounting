@@ -4,6 +4,7 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/shared/category/models/category.dart';
 import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
+import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
@@ -81,12 +82,14 @@ class _MaterialScreenState extends State<MaterialScreen> {
                                 ],
                                 itemsCount: controller.materials.length,
                                 getData: (index) => [
-                                  controller.materials[index].id.toString(),
+                                  (index + 1).toString(),
                                   controller.materials[index].name,
                                   controller.materials[index].quantity
-                                      .toString(),
-                                  controller.materials[index].cost.toString(),
-                                  controller.materials[index].price.toString(),
+                                      .asIntIfItIsAnInt,
+                                  controller
+                                      .materials[index].cost.toPriceString,
+                                  controller
+                                      .materials[index].price.toPriceString,
                                 ],
                                 onSelect: (index) =>
                                     controller.selectedMaterialIndex = index,

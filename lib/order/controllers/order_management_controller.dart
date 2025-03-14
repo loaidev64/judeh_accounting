@@ -50,13 +50,13 @@ final class OrderManagementController extends GetxController {
     final database = DatabaseHelper.getDatabase();
     final List<Map<String, Object?>> data;
     if (search == null) {
-      data = await database.query(Material.tableName, limit: 10);
+      data = await database.query(Material.tableName, limit: 25);
     } else {
       data = await database.query(
         Material.tableName,
         where: 'name LIKE ?',
         whereArgs: ['%$search%'],
-        limit: 10,
+        limit: 25,
       );
     }
 

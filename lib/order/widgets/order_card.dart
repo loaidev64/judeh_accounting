@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/shared/extensions/datetime.dart';
-import 'package:judeh_accounting/shared/extensions/price_double.dart';
+import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 
 import '../../shared/theme/app_colors.dart';

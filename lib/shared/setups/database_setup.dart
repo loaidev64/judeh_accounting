@@ -30,6 +30,7 @@ CREATE TABLE materials (
     price REAL NOT NULL,
     category_id INTEGER NOT NULL, -- New field: category_id (cannot be null)
     unit INTEGER NOT NULL,
+    barcode TEXT, -- New nullable field
     createdAt TEXT NOT NULL,
     updatedAt TEXT,
     FOREIGN KEY (category_id) REFERENCES categories(id) -- Optional foreign key constraint

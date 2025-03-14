@@ -48,7 +48,7 @@ final class CompanyController extends GetxController {
   /// Fetches company data from the database.
   Future<void> getData() async {
     final database = DatabaseHelper.getDatabase();
-    final data = await database.query(Company.tableName, limit: 100);
+    final data = await database.query(Company.tableName, limit: 25);
     companies.assignAll(data.map((e) => Company.fromDatabase(e)));
   }
 

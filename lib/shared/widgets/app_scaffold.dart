@@ -42,11 +42,9 @@ class AppScaffold extends StatelessWidget {
                         ),
                       ),
                 // Provide a standard title.
-                title: Text(
-                  title,
-                  style: AppTextStyles.appScaffoldAppBarText,
-                ),
+                title: Text(title),
                 centerTitle: true,
+                titleTextStyle: AppTextStyles.appScaffoldAppBarText,
                 actions: [
                   Padding(
                     padding: EdgeInsets.only(left: 15.w),

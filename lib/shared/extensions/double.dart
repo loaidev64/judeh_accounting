@@ -12,3 +12,9 @@ extension PriceDouble on double {
     return s.split('').reversed.join();
   }
 }
+
+extension IfIsIntDouble on double {
+  bool get isInt => toString().endsWith('.0');
+
+  String get asIntIfItIsAnInt => (isInt ? toInt() : this).toString();
+}

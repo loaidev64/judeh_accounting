@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:judeh_accounting/order/controllers/order_management_controller.dart';
 import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/order/widgets/order_card.dart';
-import 'package:judeh_accounting/shared/extensions/price_double.dart';
+import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/extensions/sum_list.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 import 'package:qr_mobile_vision/qr_camera.dart';
