@@ -74,10 +74,14 @@ class Material extends DatabaseModel {
 
 enum Unit {
   kilogram,
+  // gram,
+  // ton,
   amount;
 
   String get name => switch (this) {
         Unit.kilogram => 'كيلوغرام',
+        // Unit.gram => 'غرام',
+        // Unit.ton => 'طن',
         Unit.amount => 'قطعة',
       };
 }

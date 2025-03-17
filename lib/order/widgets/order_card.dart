@@ -15,6 +15,7 @@ class OrderCard extends StatelessWidget {
     required this.order,
     this.borderColor = AppColors.primary,
     this.onSelect,
+    this.onDelete,
     this.height,
   });
 
@@ -26,60 +27,61 @@ class OrderCard extends StatelessWidget {
 
   final double? height;
 
+  final void Function(int index)? onDelete;
+
   @override
   Widget build(BuildContext context) {
-    return ObxValue(
-        (expanded) => GestureDetector(
-              // onTap: () => context.pushNamed(AddOrderScreen.endpoint),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15.r),
-                  border: Border.all(color: borderColor, width: 3),
-                ),
-                height: height ?? 178.h,
-                padding: EdgeInsets.all(5),
-                margin: EdgeInsets.only(bottom: 5.h),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _headerSection(context),
-                      SizedBox(height: 5.h),
-                      AppTable(
-                        headers: [
-                          Header(label: 'الرقم', width: 59.w),
-                          Header(label: 'التفاصيل', width: 187.w),
-                          Header(label: 'السعر', width: 70.w),
-                        ],
-                        onSelect: onSelect,
-                        itemsCount: order.items.length,
-                        getData: (index) => [
-                          (index + 1).toString(),
-                          order.items[index].description,
-                          order.items[index].subTotal.toPriceString,
-                        ],
-                      ),
-                      SizedBox(height: 5.h),
-                      //TODO:: make an expanded functionallity
-                      // if (!expanded.value)
-                      GestureDetector(
-                        // onTap: () => expanded.value = true,
-                        child: Column(
-                          children: [
-                            _dot(),
-                            _dot(),
-                            _dot(),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 5.h),
-                      _total(context),
-                      SizedBox(height: 5.h),
-                    ],
-                  ),
+    return GestureDetector(
+      // onTap: () => context.pushNamed(AddOrderScreen.endpoint),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15.r),
+          border: Border.all(color: borderColor, width: 3),
+        ),
+        height: height ?? 178.h,
+        padding: EdgeInsets.all(5),
+        margin: EdgeInsets.only(bottom: 5.h),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _headerSection(context),
+              SizedBox(height: 5.h),
+              AppTable(
+                headers: [
+                  Header(label: 'الرقم', width: 59.w),
+                  Header(label: 'التفاصيل', width: 187.w),
+                  Header(label: 'السعر', width: 70.w),
+                ],
+                onDelete: onDelete,
+                onSelect: onSelect,
+                itemsCount: order.items.length,
+                getData: (index) => [
+                  (index + 1).toString(),
+                  order.items[index].description,
+                  order.items[index].subTotal.toPriceString,
+                ],
+              ),
+              SizedBox(height: 5.h),
+              //TODO:: make an expanded functionallity
+              // if (!expanded.value)
+              GestureDetector(
+                // onTap: () => expanded.value = true,
+                child: Column(
+                  children: [
+                    _dot(),
+                    _dot(),
+                    _dot(),
+                  ],
                 ),
               ),
-            ),
-        false.obs);
+              SizedBox(height: 5.h),
+              _total(context),
+              SizedBox(height: 5.h),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Container _total(BuildContext context) {

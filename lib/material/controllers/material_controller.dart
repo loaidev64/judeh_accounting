@@ -225,6 +225,33 @@ final class MaterialController extends GetxController {
                       }),
                       _buildCategoryField(material, isEditing: isEditing),
                       SizedBox(height: 5.h),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'الوحدة :',
+                            style: AppTextStyles.appTextFormFieldLabel,
+                          ),
+                          DropdownButtonFormField(
+                            style: AppTextStyles.appTextFormFieldText,
+                            decoration: InputDecoration(
+                              border: AppTextFormField.border(),
+                              enabledBorder: AppTextFormField.border(),
+                              focusedBorder: AppTextFormField.border(),
+                            ),
+                            value: material.unit,
+                            items: m.Unit.values
+                                .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e.name),
+                                    ))
+                                .toList(),
+                            onChanged: (value) =>
+                                material.unit = value ?? m.Unit.amount,
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 5.h),
                       _buildNameField(material, isEditing: isEditing),
                       SizedBox(height: 5.h),
                       _buildPriceField(material, isEditing: isEditing),

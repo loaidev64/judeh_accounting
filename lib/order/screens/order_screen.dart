@@ -27,9 +27,9 @@ class _OrderScreenState extends State<OrderScreen> {
           onAdd: controller.createOrder, resourceName: 'فاتورة'),
       child: SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: 10.w),
-        sliver: SliverToBoxAdapter(
-          child: Obx(
-            () => Column(
+        sliver: Obx(
+          () => SliverToBoxAdapter(
+            child: Column(
               children: [
                 Row(
                   children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide Material;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/material/widgets/material_search.dart';
 import 'package:judeh_accounting/order/controllers/order_management_controller.dart';
 import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/order/widgets/order_card.dart';
@@ -35,12 +36,37 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
         sliver: SliverToBoxAdapter(
           child: Column(
             children: [
-              AppBarcodeQrcodeScanner(onScan: controller.onScanBarcode),
+              ObxValue(
+                  (wantBarcode) => Column(
+                        children: [
+                          IconButton(
+                            onPressed: () =>
+                                wantBarcode.value = !wantBarcode.value,
+                            icon: Icon(wantBarcode.value
+                                ? Icons.camera_alt_outlined
+                                : Icons.no_photography_outlined),
+                          ),
+                          wantBarcode.value
+                              ? AppBarcodeQrcodeScanner(
+                                  onScan: controller.onScanBarcode)
+                              : MaterialSearch(
+                                  onSearch: controller.returnMaterials,
+                                  onSelected: ([material]) {
+                                    if (material == null) {
+                                      return;
+                                    }
+                                    controller.addItem(material);
+                                  },
+                                ),
+                        ],
+                      ),
+                  true.obs),
               SizedBox(height: 5.h),
               Obx(
                 () => OrderCard(
                   height: 300.h,
                   onSelect: controller.editItem,
+                  onDelete: controller.removeItem,
                   borderColor: controller.addedNewItem.value
                       ? Colors.green
                       : AppColors.primary,
@@ -54,7 +80,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
               SizedBox(height: 5.h),
               AppButton(
                 onTap: controller.create,
-                text: 'إضافة فاتورة',
+                text: '${controller.order == null ? 'إضافة' : 'تعديل'} فاتورة',
                 icon: 'assets/svgs/plus.svg',
               ),
             ],

@@ -52,7 +52,15 @@ class _AppTableState extends State<AppTable> {
                 widget.onSelect!.call(index);
               }
             },
-            child: _row(index, context, _selectedIndex),
+            child: widget.onDelete != null
+                ? Dismissible(
+                    key: UniqueKey(),
+                    child: _row(index, context, _selectedIndex),
+                    onDismissed: (direction) {
+                      widget.onDelete?.call(index);
+                    },
+                  )
+                : _row(index, context, _selectedIndex),
           ),
         ),
       ],
@@ -91,11 +99,6 @@ class _AppTableState extends State<AppTable> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.onDelete != null)
-              GestureDetector(
-                child: Icon(Icons.close),
-                onTap: () => widget.onDelete!(index),
-              ),
             for (int i = 0; i < widget.headers.length; i++)
               _cell(widget.headers[i].width, data[i], context,
                   index == selectedIndex),

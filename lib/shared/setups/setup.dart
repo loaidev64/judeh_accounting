@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:get/get.dart';
+import 'package:judeh_accounting/customer/models/debt.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../company/models/company.dart';
+import '../../customer/models/customer.dart';
 import '../../expense/models/expense.dart';
 import '../../order/models/order.dart';
 import '../../order/models/order_item.dart';

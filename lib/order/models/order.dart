@@ -68,4 +68,12 @@ final class Order extends DatabaseModel {
   static const tableName = 'orders';
 }
 
-enum OrderType { sell, sellRefund, buy, buyRefund }
+enum OrderType {
+  sell,
+  sellRefund,
+  buy,
+  buyRefund;
+
+  bool get canHaveCustomer =>
+      this == OrderType.sell || this == OrderType.sellRefund;
+}

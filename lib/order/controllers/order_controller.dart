@@ -45,24 +45,17 @@ final class OrderController extends GetxController {
     );
 
     // Group order items by their order_id
-    final Map<int, List<OrderItem>> orderItemsMap = {};
+    final List<Map<String, Object?>> orderItemsMap = [];
     for (var i = 0; i < orderData.length; i++) {
-      orderData[i]['order_items'] = orderItemsData
-          .where((element) => element['order_id'] == orderData[i]['id'])
-          .toList();
-    }
-    for (final itemData in orderItemsData) {
-      final orderItem = OrderItem.fromDatabase(itemData);
-      final orderId = orderItem.orderId;
-
-      if (orderItemsMap.containsKey(orderId)) {
-        orderItemsMap[orderId]!.add(orderItem);
-      } else {
-        orderItemsMap[orderId] = [orderItem];
-      }
+      orderItemsMap.add({
+        ...orderData[i],
+        'order_items': orderItemsData
+            .where((element) => element['order_id'] == orderData[i]['id'])
+            .toList(),
+      });
     }
 
-    orders.addAll(orderData.map(Order.fromDatabase));
+    orders.addAll(orderItemsMap.map(Order.fromDatabase));
 
     loading.value = false; // Stop loading
   }

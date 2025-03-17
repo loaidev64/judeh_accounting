@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:judeh_accounting/company/screens/company_screen.dart';
-import 'package:judeh_accounting/debt/screens/debt_screen.dart';
+import 'package:judeh_accounting/customer/screens/customer_screen.dart';
 import 'package:judeh_accounting/expense/screens/expense_screen.dart';
 import 'package:judeh_accounting/home/screens/home_screen.dart';
 import 'package:judeh_accounting/order/screens/order_screen.dart';

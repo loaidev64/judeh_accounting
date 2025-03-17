@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:judeh_accounting/material/models/material.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 
 import '../../shared/models/database_model.dart';
@@ -6,6 +7,7 @@ import '../../shared/models/database_model.dart';
 class OrderItem extends DatabaseModel {
   int materialId;
   String? materialName;
+  Unit? materialUnit;
   double price;
   double quantity;
   int orderId;
@@ -14,6 +16,7 @@ class OrderItem extends DatabaseModel {
     super.id = 0,
     required this.materialId,
     this.materialName,
+    this.materialUnit,
     required this.price,
     required this.quantity,
     required this.orderId,
@@ -63,7 +66,7 @@ class OrderItem extends DatabaseModel {
   double get subTotal => quantity * price;
 
   String get description =>
-      '$materialName\n${price.toPriceString} X ${quantity.toInt()}';
+      '$materialName\n${price.toPriceString} X ${quantity.asIntIfItIsAnInt}';
 
   OrderItem copyWith({
     int? materialId,

@@ -47,6 +47,16 @@ CREATE TABLE expenses (
       FOREIGN KEY (category_id) REFERENCES categories(id)
     );
 '''),
+  Migration(tableName: Customer.tableName, sql: '''
+  CREATE TABLE customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT NOT NULL,
+    phoneNumber TEXT,
+    description TEXT,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT
+);
+'''),
   Migration(tableName: Order.tableName, sql: '''
 CREATE TABLE orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -71,6 +81,20 @@ CREATE TABLE order_items (
     updatedAt TEXT,
     FOREIGN KEY (material_id) REFERENCES materials(id),
     FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+'''),
+  Migration(tableName: Debt.tableName, sql: '''
+CREATE TABLE debts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    customer_id INTEGER,
+    company_id INTEGER,
+    order_id INTEGER,
+    amount REAL NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (company_id) REFERENCES companies(id)
 );
 '''),
 ];
