@@ -12,7 +12,7 @@ import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/extensions/sum_list.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
-import 'package:vibration/vibration.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../material/models/material.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -229,14 +229,24 @@ final class OrderManagementController extends GetxController {
       );
       return;
     }
-    items.add(OrderItem(
-      materialId: material.id,
-      materialName: material.name,
-      materialUnit: material.unit,
-      price: material.price,
-      quantity: 1,
-      orderId: 0, // just for now and later will change it
-    ));
+
+    final item =
+        items.where((element) => element.materialId == material.id).firstOrNull;
+    if (item == null) {
+      items.add(OrderItem(
+          materialId: material.id,
+          materialName: material.name,
+          materialUnit: material.unit,
+          price: material.price,
+          quantity: 1,
+          orderId: 0));
+    } else {
+      final index =
+          items.indexWhere((element) => element.materialId == material.id);
+      items.removeAt(index);
+      items.insert(index, item.increaseQuantity());
+    }
+    toggleAddedNewItem();
 
     editItem(items.length - 1);
   }
@@ -474,6 +484,7 @@ final class OrderManagementController extends GetxController {
       items.insert(index, item.increaseQuantity());
     }
     toggleAddedNewItem();
+    beepSound();
   }
 
   void removeItem(int index) => items.removeAt(index);
@@ -482,6 +493,12 @@ final class OrderManagementController extends GetxController {
     addedNewItem.value = true;
     await Future.delayed(Duration(milliseconds: 500));
     addedNewItem.value = false;
+  }
+
+  void beepSound() async {
+    final player = AudioPlayer();
+    await player.setAsset('assets/audio/barcode-scanner-beep.mp3');
+    await player.play();
   }
 
   // Constants for repeated values

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
-import 'package:vibration/vibration.dart';
-import 'package:vibration/vibration_presets.dart';
 
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -182,10 +179,6 @@ final class MaterialController extends GetxController {
                                       if (material.barcode == null)
                                         AppBarcodeQrcodeScanner(
                                           onScan: (barcode) async {
-                                            await Vibration.vibrate(
-                                                duration: 1000,
-                                                preset: VibrationPreset
-                                                    .quickSuccessAlert);
                                             material.barcode = barcode;
                                             setState(() {});
                                           },

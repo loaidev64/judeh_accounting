@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 import 'package:qr_mobile_vision/qr_camera.dart';
-import 'package:vibration/vibration.dart';
-import 'package:vibration/vibration_presets.dart';
 
 class AppBarcodeQrcodeScanner extends StatefulWidget {
   const AppBarcodeQrcodeScanner({
