@@ -14,6 +14,8 @@ import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../company/models/company.dart';
+import '../../company/widgets/company_search.dart';
 import '../../material/models/material.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/widgets.dart';
@@ -80,6 +82,23 @@ final class OrderManagementController extends GetxController {
     }
 
     return data.map(Customer.fromDatabase).toList();
+  }
+
+  Future<List<Company>> returnCompanies([String? search]) async {
+    final database = DatabaseHelper.getDatabase();
+    final List<Map<String, Object?>> data;
+    if (search == null) {
+      data = await database.query(Company.tableName, limit: 25);
+    } else {
+      data = await database.query(
+        Company.tableName,
+        where: 'name LIKE ? OR description LIKE ?',
+        whereArgs: ['%$search%', '%$search%'],
+        limit: 25,
+      );
+    }
+
+    return data.map(Company.fromDatabase).toList();
   }
 
   void editItem(int index) async {
@@ -315,9 +334,16 @@ final class OrderManagementController extends GetxController {
                                   model: item.copyWith(orderId: order.id),
                                   tableName: OrderItem.tableName);
 
-                              database.rawUpdate('''
+                              if (type == OrderType.sell) {
+                                await database.rawUpdate('''
                                   UPDATE ${Material.tableName} SET quantity = quantity - ? WHERE id = ?
                                   ''', [item.quantity, item.materialId]);
+                              } else {
+                                // it will be sell Refund
+                                await database.rawUpdate('''
+                                  UPDATE ${Material.tableName} SET quantity = quantity + ? WHERE id = ?
+                                  ''', [item.quantity, item.materialId]);
+                              }
                             }
 
                             if (customer != null) {
@@ -339,83 +365,110 @@ final class OrderManagementController extends GetxController {
           ),
           isScrollControlled: true);
     } else {
-      // await Get.bottomSheet(
-      //     Container(
-      //       decoration: BoxDecoration(
-      //         color: Colors.white,
-      //         borderRadius: _bottomSheetBorderRadius,
-      //         boxShadow: [_bottomSheetBoxShadow],
-      //       ),
-      //       height: 356.h,
-      //       width: double.infinity,
-      //       padding: _bottomSheetPadding,
-      //       child: m.Material(
-      //         child: Form(
-      //           child: Column(
-      //             children: [
-      //               ObxValue(
-      //                   (haveCustomer) => Column(
-      //                         children: [
-      //                           CustomerSearch(
-      //                             onSearch: returnCustomers,
-      //                             onSelected: ([cust]) {
-      //                               haveCustomer.value = cust != null;
-      //                               customer = cust;
-      //                             },
-      //                           ),
-      //                           SizedBox(height: 5.h),
-      //                           if (haveCustomer.value)
-      //                             AppTextFormField(
-      //                               label: 'آجل',
-      //                               keyboardType: TextInputType.number,
-      //                               onSaved: (value) => debt.amount =
-      //                                   double.tryParse(value ?? '') ?? 0,
-      //                               isRequired: true,
-      //                             ),
-      //                         ],
-      //                       ),
-      //                   false.obs),
-      //               SizedBox(height: 5.h),
-      //               Builder(builder: (context) {
-      //                 return AppButton(
-      //                   onTap: () async {
-      //                     if (Form.of(context).validate()) {
-      //                       Form.of(context).save();
+      Company company = Company.empty();
+      await Get.bottomSheet(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: _bottomSheetBorderRadius,
+              boxShadow: [_bottomSheetBoxShadow],
+            ),
+            height: 356.h,
+            width: double.infinity,
+            padding: _bottomSheetPadding,
+            child: m.Material(
+              child: Form(
+                child: Column(
+                  children: [
+                    ObxValue(
+                        (haveDebt) => Column(
+                              children: [
+                                CompanySearch(
+                                  onSearch:
+                                      returnCompanies, // Changed to use new method
+                                  onSelected: ([comp]) {
+                                    if (comp != null) {
+                                      company = comp;
+                                    }
+                                  },
+                                ),
+                                SizedBox(height: 5.h),
+                                TextButton(
+                                  onPressed: () =>
+                                      haveDebt.value = !haveDebt.value,
+                                  child: Text('لديه آجل؟'),
+                                ),
+                                SizedBox(height: 5.h),
+                                if (haveDebt.value)
+                                  AppTextFormField(
+                                    label: 'آجل',
+                                    keyboardType: TextInputType.number,
+                                    onSaved: (value) => debt.amount =
+                                        double.tryParse(value ?? '') ?? 0,
+                                    isRequired: true,
+                                  ),
+                                SizedBox(height: 5.h),
+                                Builder(builder: (context) {
+                                  return AppButton(
+                                    onTap: () async {
+                                      if (Form.of(context).validate()) {
+                                        Form.of(context).save();
 
-      //                       Order order = Order(
-      //                           type: type, total: items.total, items: items);
-      //                       if (customer != null) {
-      //                         order.customerId = customer!.id;
-      //                         debt.customerId = customer!.id;
-      //                       }
+                                        final database =
+                                            DatabaseHelper.getDatabase();
 
-      //                       order = await DatabaseHelper.create(
-      //                           model: order, tableName: Order.tableName);
+                                        Order order = Order(
+                                          type: type,
+                                          total: items.total,
+                                          items: items,
+                                          companyId: company.id,
+                                        );
+                                        debt.companyId = company.id;
 
-      //                       for (final item in items) {
-      //                         await DatabaseHelper.create(
-      //                             model: item.copyWith(orderId: order.id),
-      //                             tableName: OrderItem.tableName);
-      //                       }
+                                        order = await DatabaseHelper.create(
+                                            model: order,
+                                            tableName: Order.tableName);
 
-      //                       if (customer != null) {
-      //                         debt.orderId = order.id;
-      //                         await DatabaseHelper.create(
-      //                             model: debt, tableName: Debt.tableName);
-      //                       }
+                                        for (final item in items) {
+                                          await DatabaseHelper.create(
+                                              model: item.copyWith(
+                                                  orderId: order.id),
+                                              tableName: OrderItem.tableName);
 
-      //                       Get.back();
-      //                     }
-      //                   },
-      //                   text: 'تم',
-      //                 );
-      //               }),
-      //             ],
-      //           ),
-      //         ),
-      //       ),
-      //     ),
-      //     isScrollControlled: true);
+                                          if (type == OrderType.buy) {
+                                            await database.rawUpdate('''
+                                  UPDATE ${Material.tableName} SET quantity = quantity + ? WHERE id = ?
+                                  ''', [item.quantity, item.materialId]);
+                                          } else {
+                                            // it will be buy Refund
+                                            await database.rawUpdate('''
+                                  UPDATE ${Material.tableName} SET quantity = quantity - ? WHERE id = ?
+                                  ''', [item.quantity, item.materialId]);
+                                          }
+                                        }
+
+                                        if (haveDebt.value) {
+                                          debt.orderId = order.id;
+                                          await DatabaseHelper.create(
+                                              model: debt,
+                                              tableName: Debt.tableName);
+                                        }
+
+                                        Get.back();
+                                      }
+                                    },
+                                    text: 'تم',
+                                  );
+                                }),
+                              ],
+                            ),
+                        false.obs),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          isScrollControlled: true);
     }
 
     Get.back();

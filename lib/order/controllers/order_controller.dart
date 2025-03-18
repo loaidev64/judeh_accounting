@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/order/models/order_item.dart';
 import 'package:judeh_accounting/order/screens/order_management_screen.dart';
@@ -39,7 +38,17 @@ final class OrderController extends GetxController {
     // Fetch order items for the retrieved orders
     final orderIds = orderData.map((e) => e['id'] as int).toList();
     final orderItemsData = await database.query(
-      OrderItem.tableName,
+      'order_items JOIN materials ON order_items.material_id = materials.id',
+      columns: [
+        'order_items.id',
+        'material_id',
+        'price',
+        'quantity',
+        'order_id',
+        'createdAt',
+        'updatedAt',
+        'materials.name AS material_name'
+      ],
       where: 'order_id IN (${List.filled(orderIds.length, '?').join(',')})',
       whereArgs: orderIds,
     );

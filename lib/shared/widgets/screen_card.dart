@@ -61,11 +61,6 @@ final class ScreenCard extends StatelessWidget {
           label: 'حركة المادة',
           routeName: MaterialMovmentScreen.routeName,
         ),
-        ScreenCard(
-          icon: 'assets/svgs/debt.svg',
-          label: 'دفتر الديون',
-          routeName: DebtScreen.routeName,
-        ),
       ];
 
   static List<ScreenCard> get homeCards => [
@@ -93,6 +88,11 @@ final class ScreenCard extends StatelessWidget {
           icon: 'assets/svgs/report.svg',
           label: 'الجرد',
           routeName: ReportScreen.routeName,
+        ),
+        ScreenCard(
+          icon: 'assets/svgs/debt.svg',
+          label: 'الزبائن',
+          routeName: CustomerScreen.routeName,
         ),
       ];
 }

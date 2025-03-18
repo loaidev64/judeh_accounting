@@ -18,7 +18,7 @@ abstract class AppRouter {
     GetPage(
         name: MaterialMovmentScreen.routeName,
         page: () => MaterialMovmentScreen()),
-    GetPage(name: DebtScreen.routeName, page: () => DebtScreen()),
+    GetPage(name: CustomerScreen.routeName, page: () => CustomerScreen()),
     GetPage(name: OrderScreen.routeName, page: () => OrderScreen()),
     GetPage(name: CompanyScreen.routeName, page: () => CompanyScreen()),
     GetPage(name: MaterialScreen.routeName, page: () => MaterialScreen()),
