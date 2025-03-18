@@ -45,7 +45,7 @@ class Material extends DatabaseModel {
         quantity: 0,
         cost: 0.0,
         price: 0.0,
-        categoryId: 0, // Default value for categoryId
+        categoryId: -1, // Default value for categoryId
         unit: Unit.amount,
         barcode: null, // Default value for barcode
         createdAt: DateTime.now(),

@@ -10,6 +10,12 @@ final class OrderController extends GetxController {
   final orders = <Order>[].obs;
   final loading = false.obs;
 
+  @override
+  void onInit() {
+    getOrders();
+    super.onInit();
+  }
+
   void changeType(OrderType type) {
     currentType.value = type;
 
@@ -42,11 +48,11 @@ final class OrderController extends GetxController {
       columns: [
         'order_items.id',
         'material_id',
-        'price',
-        'quantity',
+        'order_items.price',
+        'order_items.quantity',
         'order_id',
-        'createdAt',
-        'updatedAt',
+        'order_items.createdAt',
+        'order_items.updatedAt',
         'materials.name AS material_name'
       ],
       where: 'order_id IN (${List.filled(orderIds.length, '?').join(',')})',
@@ -76,5 +82,10 @@ final class OrderController extends GetxController {
     getOrders();
   }
 
-  Future<void> editOrder() async {}
+  Future<void> editOrder(Order order) async {
+    await Get.toNamed(OrderManagementScreen.routeName,
+        arguments: (currentType.value, order));
+
+    getOrders();
+  }
 }

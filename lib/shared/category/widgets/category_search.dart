@@ -12,18 +12,21 @@ class CategorySearch extends StatefulWidget {
     super.key,
     required this.onSearch,
     required this.onSelected,
+    this.controller,
   });
 
   final Future<List<Category>> Function(String? search) onSearch;
 
   final void Function([Category? category]) onSelected;
 
+  final TextEditingController? controller;
+
   @override
   State<CategorySearch> createState() => _CategorySearchState();
 }
 
 class _CategorySearchState extends State<CategorySearch> {
-  final categoryController = TextEditingController();
+  late final categoryController = widget.controller ?? TextEditingController();
 
   @override
   Widget build(BuildContext context) {

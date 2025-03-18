@@ -245,9 +245,18 @@ final class MaterialController extends GetxController {
                         ],
                       ),
                       SizedBox(height: 5.h),
-                      _buildNameField(material, isEditing: isEditing),
-                      SizedBox(height: 5.h),
-                      _buildPriceField(material, isEditing: isEditing),
+                      Row(
+                        children: [
+                          Expanded(
+                            child:
+                                _buildNameField(material, isEditing: isEditing),
+                          ),
+                          SizedBox(width: 5.w),
+                          Expanded(
+                              child: _buildPriceField(material,
+                                  isEditing: isEditing)),
+                        ],
+                      ),
                       SizedBox(height: 5.h),
                       _buildQuantityAndCostFields(material,
                           isEditing: isEditing),
@@ -334,6 +343,7 @@ final class MaterialController extends GetxController {
   /// Builds the category field using TypeAhead.
   Widget _buildCategoryField(m.Material material, {bool isEditing = false}) {
     return CategorySearch(
+      controller: _categoryIdTextController,
       onSearch: returnCategories,
       onSelected: ([category]) => material.categoryId = category!.id,
     );
@@ -371,6 +381,57 @@ final class MaterialController extends GetxController {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
                     if (await _checkIfBarcodeOrNameAlreadyExsists(material)) {
+                      return;
+                    }
+
+                    if (material.categoryId == -1) {
+                      if (_categoryIdTextController.text.isNotEmpty) {
+                        final bool result = await Get.dialog(
+                          AlertDialog.adaptive(
+                            title: Text(
+                              'تحذير',
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontSize: 24.sp,
+                                fontFamily: appFontFamily,
+                              ),
+                            ),
+                            content: Text(
+                              'لا يوجد لديك هذه التصنيف "${_categoryIdTextController.text}"، هل تريد إضافتها إلى التصنيفات؟',
+                              style: TextStyle(fontFamily: appFontFamily),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Get.back(result: false),
+                                child: Text('إلغاء'),
+                              ),
+                              TextButton(
+                                onPressed: () => Get.back(result: true),
+                                child: Text('موافق'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (result) {
+                          final newCategory = Category(
+                            name: _categoryIdTextController.text,
+                            type: CategoryType.material,
+                            createdAt: DateTime.now(),
+                          );
+
+                          // Create the category and get its ID
+                          final category = await DatabaseHelper.create(
+                            model: newCategory,
+                            tableName: Category.tableName,
+                          );
+
+                          // Update material with new category ID
+                          material.categoryId = category.id;
+                        } else {
+                          return; // Cancel the operation
+                        }
+                      }
                       return;
                     }
 
@@ -429,7 +490,9 @@ final class MaterialController extends GetxController {
           ),
         ),
         content: Text(
-            'لا يمكنك إضافة هذا المنتج لانك قمت بالفعل بإنشاء منتج له نفس الباركود ونفس الاسم'),
+          'لا يمكنك إضافة هذا المنتج لانك قمت بالفعل بإنشاء منتج له نفس الباركود ونفس الاسم',
+          style: TextStyle(fontFamily: appFontFamily),
+        ),
       ));
       return true;
     }

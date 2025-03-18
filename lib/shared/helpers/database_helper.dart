@@ -1,75 +1,129 @@
 import 'package:get/get.dart';
-import 'package:judeh_accounting/company/models/company.dart';
-import 'package:judeh_accounting/shared/models/database_model.dart';
 import 'package:sqflite/sqflite.dart';
-import '/shared/extensions/datetime.dart';
+import '../../backup/models/backup.dart';
+import 'package:judeh_accounting/shared/models/database_model.dart';
 
 abstract class DatabaseHelper {
   static Database getDatabase() => Get.find();
 
+  /// Creates a new record in the specified table and generates a backup entry
   static Future<T> create<T extends DatabaseModel>({
     required T model,
     required String tableName,
   }) async {
-    //FIXME:: change it later
-    // if (this is! Backup) {
-    //   final backup = Backup(
-    //       data: {...toDatabase, 'created_at': createdAt.toFullString},
-    //       action: 'create',
-    //       modelId: 0,
-    //       table: tableName);
-    //   backup.save();
-    // }
-
-    final database = getDatabase();
-
-    final createdId = await database.insert(tableName, {
+    // Prepare data with null ID to allow auto-increment
+    final data = {
       ...model.toDatabase,
       'createdAt': DateTime.now().toIso8601String(),
       'id': null,
-    });
+    };
 
-    if (createdId > 0) {
-      model.id = createdId;
-      return model;
+    final database = getDatabase();
+
+    // Insert the main record
+    final createdId = await database.insert(tableName, data);
+
+    if (createdId <= 0) {
+      throw Exception('Failed to create ${T.toString()} record');
     }
 
-    Get.printError(info: 'The model was not created');
-    throw Exception('The model was not created');
-  }
+    // Update model with generated ID
+    model.id = createdId;
 
-  static Future<T> update<T extends DatabaseModel>({
-    required T model,
-    required String tableName,
-  }) async {
-    // if (this is! BackupModel) {
-    //   final backup = BackupModel(data: {
-    //     ...toDatabase,
-    //     'created_at': createdAt.toFullString,
-    //     'updated_at': updatedAt?.toFullString ?? DateTime.now().toFullString
-    //   }, action: 'update', modelId: id, table: tableName);
-    //   backup.save();
-    // }
-    final database = getDatabase();
-    final count = await database.update(tableName,
-        {...model.toDatabase, 'updatedAt': DateTime.now().toIso8601String()},
-        where: 'id = ?', whereArgs: [model.id]);
-    if (count == 0) {
-      Get.printError(info: 'The model did not get updated');
+    // Create backup entry unless creating a Backup record itself
+    if (T != Backup) {
+      await _createBackup(
+        action: BackupAction.create,
+        model: model,
+        tableName: tableName,
+        data: data,
+      );
     }
 
     return model;
   }
 
-  static Future<void> delete<T extends DatabaseModel>(
-      {required T model, required String tableName}) async {
+  /// Updates an existing record and generates a backup entry
+  static Future<T> update<T extends DatabaseModel>({
+    required T model,
+    required String tableName,
+  }) async {
+    // Prepare data with update timestamp
+    final data = {
+      ...model.toDatabase,
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+
+    // Create backup entry before update
+    if (T != Backup) {
+      await _createBackup(
+        action: BackupAction.update,
+        model: model,
+        tableName: tableName,
+        data: data,
+      );
+    }
+
     final database = getDatabase();
-    final count = await database
-        .delete(tableName, where: 'id = ?', whereArgs: [model.id]);
+    final count = await database.update(
+      tableName,
+      data,
+      where: 'id = ?',
+      whereArgs: [model.id],
+    );
 
     if (count == 0) {
-      Get.printError(info: 'The model did not got deleted');
-      throw Exception('The model did not got deleted');
+      throw Exception('No records updated for ${T.toString()} ID ${model.id}');
     }
+
+    return model;
+  }
+
+  /// Deletes a record and generates a backup entry
+  static Future<void> delete<T extends DatabaseModel>({
+    required T model,
+    required String tableName,
+  }) async {
+    // Create backup entry before deletion
+    if (T != Backup) {
+      await _createBackup(
+        action: BackupAction.delete,
+        model: model,
+        tableName: tableName,
+        data: model.toDatabase,
+      );
+    }
+
+    final database = getDatabase();
+    final count = await database.delete(
+      tableName,
+      where: 'id = ?',
+      whereArgs: [model.id],
+    );
+
+    if (count == 0) {
+      throw Exception('Failed to delete ${T.toString()} ID ${model.id}');
+    }
+  }
+
+  /// Helper method to create consistent backup entries
+  static Future<void> _createBackup<T extends DatabaseModel>({
+    required BackupAction action,
+    required T model,
+    required String tableName,
+    required Map<String, Object?> data,
+  }) async {
+    final backup = Backup(
+      data: data,
+      action: action,
+      modelId: model.id,
+      table: tableName,
+      createdAt: DateTime.now(),
+    );
+
+    await getDatabase().insert(
+      Backup.tableName,
+      backup.toDatabase,
+    );
   }
 }

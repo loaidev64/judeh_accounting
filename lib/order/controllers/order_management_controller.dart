@@ -47,6 +47,8 @@ final class OrderManagementController extends GetxController {
     type = orderType;
     this.order = order;
 
+    items.addAllIf(order != null, order!.items);
+
     super.onInit();
   }
 

@@ -97,6 +97,17 @@ CREATE TABLE debts (
     FOREIGN KEY (company_id) REFERENCES companies(id)
 );
 '''),
+Migration(tableName: Backup.tableName, sql: '''
+CREATE TABLE backups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    data TEXT NOT NULL,
+    model_id INTEGER NOT NULL,
+    action INTEGER NOT NULL, // Changed to INTEGER
+    table TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT
+);
+'''),
 ];
 
 Future<void> _setupDatabase() async {

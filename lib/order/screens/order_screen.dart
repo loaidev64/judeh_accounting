@@ -77,9 +77,14 @@ class _OrderScreenState extends State<OrderScreen> {
                     ? AppLoading()
                     : Column(
                         children: List.generate(
-                            controller.orders.length,
-                            (index) =>
-                                OrderCard(order: controller.orders[index])),
+                          controller.orders.length,
+                          (index) => OrderCard(
+                            onSelect: () =>
+                                controller.editOrder(controller.orders[index]),
+                            order: controller.orders[index],
+                            haveFixedHeight: false,
+                          ),
+                        ),
                       ),
               ],
             ),

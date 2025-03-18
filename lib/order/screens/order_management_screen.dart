@@ -64,8 +64,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
               SizedBox(height: 5.h),
               Obx(
                 () => OrderCard(
-                  height: 300.h,
-                  onSelect: controller.editItem,
+                  onSelectRow: controller.editItem,
                   onDelete: controller.removeItem,
                   borderColor: controller.addedNewItem.value
                       ? Colors.green
