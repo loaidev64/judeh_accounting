@@ -15,6 +15,9 @@ class AppTextFormField extends StatelessWidget {
     this.validator,
     this.isRequired = false,
     this.keyboardType,
+    this.suffix,
+    this.counter,
+    this.autofocus = false,
   });
 
   final TextEditingController? controller;
@@ -25,11 +28,17 @@ class AppTextFormField extends StatelessWidget {
 
   final bool isRequired;
 
+  final bool autofocus;
+
   final void Function(String? value)? onSaved;
 
   final String? Function(String?)? validator;
 
   final TextInputType? keyboardType;
+
+  final Widget? suffix;
+
+  final Widget? counter;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +51,7 @@ class AppTextFormField extends StatelessWidget {
         ),
         TextFormField(
           keyboardType: keyboardType,
+          autocorrect: autofocus,
           validator: (value) {
             if (!isRequired) {
               return validator?.call(value);
@@ -58,6 +68,8 @@ class AppTextFormField extends StatelessWidget {
           style: AppTextStyles.appTextFormFieldText
               .copyWith(color: readonly ? AppColors.orange : AppColors.primary),
           decoration: InputDecoration(
+            suffix: suffix,
+            counter: counter,
             border: border(),
             enabledBorder: border(),
             focusedBorder: border(),

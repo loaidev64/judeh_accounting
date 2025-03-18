@@ -6,11 +6,11 @@ class AddEditBottomNavBar extends StatelessWidget {
   const AddEditBottomNavBar({
     super.key,
     required this.onAdd,
-    required this.onEdit,
+    this.onEdit,
     required this.resourceName,
   });
 
-  final Future Function() onEdit;
+  final Future Function()? onEdit;
 
   final Future Function() onAdd;
 

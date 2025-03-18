@@ -1,44 +1,42 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Material;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:judeh_accounting/shared/extensions/double.dart';
+import 'package:judeh_accounting/shared/theme/app_colors.dart';
+import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
-import '../models/category.dart';
+import '../models/material.dart';
 
-class CategorySearch extends StatefulWidget {
-  const CategorySearch({
+class MaterialSearch extends StatefulWidget {
+  const MaterialSearch({
     super.key,
     required this.onSearch,
     required this.onSelected,
-    this.controller,
   });
 
-  final Future<List<Category>> Function(String? search) onSearch;
+  final Future<List<Material>> Function(String? search) onSearch;
 
-  final void Function([Category? category]) onSelected;
-
-  final TextEditingController? controller;
+  final void Function([Material? material]) onSelected;
 
   @override
-  State<CategorySearch> createState() => _CategorySearchState();
+  State<MaterialSearch> createState() => _MaterialSearchState();
 }
 
-class _CategorySearchState extends State<CategorySearch> {
-  late final categoryController = widget.controller ?? TextEditingController();
+class _MaterialSearchState extends State<MaterialSearch> {
+  final materialController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return TypeAheadField<Category>(
+    return TypeAheadField<Material>(
       suggestionsCallback: widget.onSearch,
-      controller: categoryController,
+      controller: materialController,
       builder: (context, controller, focusNode) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'التصنيف',
+              'المنتج',
               style: AppTextStyles.appTextFormFieldLabel,
             ),
             TextField(
@@ -47,7 +45,7 @@ class _CategorySearchState extends State<CategorySearch> {
               decoration: InputDecoration(
                 suffix: GestureDetector(
                   onTap: () {
-                    categoryController.clear();
+                    materialController.clear();
                     widget.onSelected();
                   },
                   child: Icon(
@@ -68,15 +66,15 @@ class _CategorySearchState extends State<CategorySearch> {
         padding: EdgeInsets.all(10.w),
         child: Text('لا يوجد أي نتائج'),
       ),
-      itemBuilder: (context, category) {
+      itemBuilder: (context, material) {
         return ListTile(
-          title: Text(category.name),
-          subtitle: Text(category.description ?? ''),
+          title: Text(material.name),
+          subtitle: Text('السعر: ${material.price.toPriceString}'),
         );
       },
-      onSelected: (category) {
-        categoryController.text = category.name;
-        widget.onSelected(category);
+      onSelected: (material) {
+        materialController.text = material.name;
+        widget.onSelected(material);
       },
     );
   }

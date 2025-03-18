@@ -86,10 +86,10 @@ final class ExpenseController extends GetxController {
     final List<Map<String, Object?>> expenses;
     if (category == null) {
       expenses = await DatabaseHelper.getDatabase()
-          .query(Expense.tableName, limit: 100);
+          .query(Expense.tableName, limit: 25);
     } else {
       expenses = await DatabaseHelper.getDatabase().query(Expense.tableName,
-          where: 'category_id = ?', whereArgs: [category.id], limit: 100);
+          where: 'category_id = ?', whereArgs: [category.id], limit: 25);
     }
     this.expenses.value = expenses.map(Expense.fromDatabase).toList();
     loading.value = false;
@@ -109,12 +109,12 @@ final class ExpenseController extends GetxController {
       categories = await DatabaseHelper.getDatabase().query(Category.tableName,
           where: 'type = ?',
           whereArgs: [CategoryType.expense.index],
-          limit: 100);
+          limit: 25);
     } else {
       categories = await DatabaseHelper.getDatabase().query(Category.tableName,
           where: "name LIKE ? AND type = ?",
           whereArgs: ['%$search%', CategoryType.expense.index],
-          limit: 100);
+          limit: 25);
     }
     return categories.map(Category.fromDatabase).toList();
   }

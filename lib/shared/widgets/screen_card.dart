@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../company/screens/company_screen.dart';
-import '../../debt/screens/debt_screen.dart';
+import '../../customer/screens/customer_screen.dart';
 import '../../expense/screens/expense_screen.dart';
 import '../../material/screens/material_movment_screen.dart';
 import '../../material/screens/material_screen.dart';
@@ -61,11 +61,6 @@ final class ScreenCard extends StatelessWidget {
           label: 'حركة المادة',
           routeName: MaterialMovmentScreen.routeName,
         ),
-        ScreenCard(
-          icon: 'assets/svgs/debt.svg',
-          label: 'دفتر الديون',
-          routeName: DebtScreen.routeName,
-        ),
       ];
 
   static List<ScreenCard> get homeCards => [
@@ -93,6 +88,11 @@ final class ScreenCard extends StatelessWidget {
           icon: 'assets/svgs/report.svg',
           label: 'الجرد',
           routeName: ReportScreen.routeName,
+        ),
+        ScreenCard(
+          icon: 'assets/svgs/debt.svg',
+          label: 'الزبائن',
+          routeName: CustomerScreen.routeName,
         ),
       ];
 }

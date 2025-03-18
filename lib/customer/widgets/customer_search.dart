@@ -3,42 +3,39 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
-import '../models/category.dart';
+import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_text_styles.dart';
+import '../models/customer.dart'; // Import the Customer model
 
-class CategorySearch extends StatefulWidget {
-  const CategorySearch({
+class CustomerSearch extends StatefulWidget {
+  const CustomerSearch({
     super.key,
     required this.onSearch,
     required this.onSelected,
-    this.controller,
   });
 
-  final Future<List<Category>> Function(String? search) onSearch;
+  final Future<List<Customer>> Function(String? search) onSearch;
 
-  final void Function([Category? category]) onSelected;
-
-  final TextEditingController? controller;
+  final void Function([Customer? customer]) onSelected;
 
   @override
-  State<CategorySearch> createState() => _CategorySearchState();
+  State<CustomerSearch> createState() => _CustomerSearchState();
 }
 
-class _CategorySearchState extends State<CategorySearch> {
-  late final categoryController = widget.controller ?? TextEditingController();
+class _CustomerSearchState extends State<CustomerSearch> {
+  final customerController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return TypeAheadField<Category>(
+    return TypeAheadField<Customer>(
       suggestionsCallback: widget.onSearch,
-      controller: categoryController,
+      controller: customerController,
       builder: (context, controller, focusNode) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'التصنيف',
+              'الزبون',
               style: AppTextStyles.appTextFormFieldLabel,
             ),
             TextField(
@@ -47,7 +44,7 @@ class _CategorySearchState extends State<CategorySearch> {
               decoration: InputDecoration(
                 suffix: GestureDetector(
                   onTap: () {
-                    categoryController.clear();
+                    customerController.clear();
                     widget.onSelected();
                   },
                   child: Icon(
@@ -68,15 +65,15 @@ class _CategorySearchState extends State<CategorySearch> {
         padding: EdgeInsets.all(10.w),
         child: Text('لا يوجد أي نتائج'),
       ),
-      itemBuilder: (context, category) {
+      itemBuilder: (context, customer) {
         return ListTile(
-          title: Text(category.name),
-          subtitle: Text(category.description ?? ''),
+          title: Text(customer.name),
+          subtitle: Text(customer.phoneNumber ?? 'لا يوجد رقم هاتف'),
         );
       },
-      onSelected: (category) {
-        categoryController.text = category.name;
-        widget.onSelected(category);
+      onSelected: (customer) {
+        customerController.text = customer.name;
+        widget.onSelected(customer);
       },
     );
   }

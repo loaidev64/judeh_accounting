@@ -6,3 +6,4 @@ export 'app_button.dart';
 export 'app_text_form_field.dart';
 export 'app_tab.dart';
 export 'add_edit_bottom_nav_bar.dart';
+export 'app_barcode_qrcode_scanner.dart';

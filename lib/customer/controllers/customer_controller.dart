@@ -5,10 +5,10 @@ import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 
 import '../../shared/widgets/widgets.dart';
-import '../models/company.dart';
+import '../models/customer.dart';
 
-final class CompanyController extends GetxController {
-  final companies = <Company>[].obs;
+final class CustomerController extends GetxController {
+  final customers = <Customer>[].obs;
   int selectedIndex = -1;
 
   final _idTextController = TextEditingController();
@@ -16,7 +16,6 @@ final class CompanyController extends GetxController {
   final _phoneNumberTextController = TextEditingController();
   final _descriptionTextController = TextEditingController();
 
-  // Constants for repeated values
   static const _bottomSheetBorderRadius = BorderRadius.only(
     topLeft: Radius.circular(15),
     topRight: Radius.circular(15),
@@ -45,15 +44,13 @@ final class CompanyController extends GetxController {
     super.onInit();
   }
 
-  /// Fetches company data from the database.
   Future<void> getData() async {
     final database = DatabaseHelper.getDatabase();
-    final data = await database.query(Company.tableName, limit: 25);
-    companies.assignAll(data.map((e) => Company.fromDatabase(e)));
+    final data = await database.query(Customer.tableName, limit: 25);
+    customers.assignAll(data.map((e) => Customer.fromDatabase(e)));
   }
 
-  /// Opens a bottom sheet to create or edit a company.
-  Future<void> _showCompanyForm(Company company,
+  Future<void> _showCustomerForm(Customer customer,
       {bool isEditing = false}) async {
     await Get.bottomSheet(
       Container(
@@ -69,11 +66,11 @@ final class CompanyController extends GetxController {
           child: Form(
             child: Column(
               children: [
-                _buildNameAndPhoneNumberFields(company, isEditing: isEditing),
+                _buildNameAndPhoneNumberFields(customer, isEditing: isEditing),
                 SizedBox(height: 5.h),
-                _buildDescriptionField(company, isEditing: isEditing),
+                _buildDescriptionField(customer, isEditing: isEditing),
                 SizedBox(height: 10.h),
-                _buildActionButtons(company, isEditing: isEditing),
+                _buildActionButtons(customer, isEditing: isEditing),
               ],
             ),
           ),
@@ -81,19 +78,17 @@ final class CompanyController extends GetxController {
       ),
       isScrollControlled: true,
     );
-
-    await getData(); // Refresh the companies list
+    await getData();
   }
 
-  /// Builds the name and phone number fields.
-  Widget _buildNameAndPhoneNumberFields(Company company,
+  Widget _buildNameAndPhoneNumberFields(Customer customer,
       {required bool isEditing}) {
     return Row(
       children: [
         Expanded(
           child: AppTextFormField(
             label: 'الاسم',
-            onSaved: (value) => company.name = value ?? '',
+            onSaved: (value) => customer.name = value ?? '',
             isRequired: true,
             controller: isEditing ? _nameTextController : null,
           ),
@@ -102,7 +97,7 @@ final class CompanyController extends GetxController {
         Expanded(
           child: AppTextFormField(
             label: 'الرقم',
-            onSaved: (value) => company.phoneNumber = value,
+            onSaved: (value) => customer.phoneNumber = value,
             controller: isEditing ? _phoneNumberTextController : null,
           ),
         ),
@@ -110,17 +105,15 @@ final class CompanyController extends GetxController {
     );
   }
 
-  /// Builds the description field.
-  Widget _buildDescriptionField(Company company, {required bool isEditing}) {
+  Widget _buildDescriptionField(Customer customer, {required bool isEditing}) {
     return AppTextFormField(
       label: 'ملاحظات',
-      onSaved: (value) => company.description = value,
+      onSaved: (value) => customer.description = value,
       controller: isEditing ? _descriptionTextController : null,
     );
   }
 
-  /// Builds the action buttons (Add/Edit, Delete).
-  Widget _buildActionButtons(Company company, {bool isEditing = false}) {
+  Widget _buildActionButtons(Customer customer, {bool isEditing = false}) {
     return Row(
       children: [
         if (isEditing)
@@ -130,8 +123,8 @@ final class CompanyController extends GetxController {
                 return AppButton(
                   onTap: () async {
                     await DatabaseHelper.delete(
-                      model: company,
-                      tableName: Company.tableName,
+                      model: customer,
+                      tableName: Customer.tableName,
                     );
                     Get.back();
                   },
@@ -152,21 +145,20 @@ final class CompanyController extends GetxController {
                     Form.of(context).save();
                     if (isEditing) {
                       await DatabaseHelper.update(
-                        model: company,
-                        tableName: Company.tableName,
+                        model: customer,
+                        tableName: Customer.tableName,
                       );
                     } else {
                       await DatabaseHelper.create(
-                        model: company,
-                        tableName: Company.tableName,
+                        model: customer,
+                        tableName: Customer.tableName,
                       );
                     }
                     Get.back();
                   }
                 },
                 text: isEditing ? 'تعديل' : 'إضافة',
-                icon:
-                    isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
+                icon: isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
               );
             },
           ),
@@ -175,18 +167,16 @@ final class CompanyController extends GetxController {
     );
   }
 
-  /// Opens a bottom sheet to create a new company.
   Future<void> create() async {
-    final company = Company.empty();
-    await _showCompanyForm(company);
+    final customer = Customer.empty();
+    await _showCustomerForm(customer);
   }
 
-  /// Opens a bottom sheet to edit an existing company.
   Future<void> edit() async {
     if (selectedIndex < 0) {
       Get.snackbar(
         'تحذير',
-        'يجب عليك أولاً اختيار شركة',
+        'يجب عليك أولاً اختيار عميل',
         colorText: Colors.white,
         backgroundColor: Colors.red,
         snackPosition: SnackPosition.BOTTOM,
@@ -195,12 +185,12 @@ final class CompanyController extends GetxController {
       return;
     }
 
-    final company = companies[selectedIndex];
-    _idTextController.text = company.id.toString();
-    _nameTextController.text = company.name;
-    _phoneNumberTextController.text = company.phoneNumber ?? '';
-    _descriptionTextController.text = company.description ?? '';
+    final customer = customers[selectedIndex];
+    _idTextController.text = customer.id.toString();
+    _nameTextController.text = customer.name;
+    _phoneNumberTextController.text = customer.phoneNumber ?? '';
+    _descriptionTextController.text = customer.description ?? '';
 
-    await _showCompanyForm(company, isEditing: true);
+    await _showCustomerForm(customer, isEditing: true);
   }
 }
