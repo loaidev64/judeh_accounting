@@ -41,6 +41,10 @@ dependencies:
   flutter_typeahead: ^5.2.0
   qr_mobile_vision: ^5.0.2
   just_audio: ^0.9.46
+  encrypt: ^5.0.3
+  flutter_dotenv: ^5.2.1
+  workmanager: ^0.5.2
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +73,7 @@ flutter:
     - assets/svgs/
     - assets/logos/
     - assets/audio/
+    - .env
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

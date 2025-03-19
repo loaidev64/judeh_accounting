@@ -23,7 +23,7 @@ class Backup extends DatabaseModel {
         modelId: map['model_id'] as int,
         action:
             BackupAction.values[map['action'] as int], // Convert index to enum
-        table: map['table'] as String,
+        table: map['_table'] as String,
         createdAt: DateTime.parse(map['createdAt'] as String),
         updatedAt: map['updatedAt'] != null
             ? DateTime.parse(map['updatedAt'] as String)
@@ -32,16 +32,15 @@ class Backup extends DatabaseModel {
 
   @override
   Map<String, Object?> get toDatabase => {
-        'id': id,
         'data': jsonEncode(data),
         'model_id': modelId,
         'action': action.index, // Store enum index
-        'table': table,
+        '_table': table,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
       };
 
-  static const String tableName = 'backups';
+  static const String tableName = '_backups';
 }
 
 enum BackupAction { create, update, delete }
