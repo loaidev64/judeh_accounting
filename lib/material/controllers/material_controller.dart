@@ -432,7 +432,6 @@ final class MaterialController extends GetxController {
                           return; // Cancel the operation
                         }
                       }
-                      return;
                     }
 
                     if (isEditing) {
