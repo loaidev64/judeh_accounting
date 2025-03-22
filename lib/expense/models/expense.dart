@@ -33,7 +33,7 @@ final class Expense extends DatabaseModel {
         id: 0,
         description: null,
         cost: 0.0,
-        categoryId: 0, // Default value for categoryId
+        categoryId: -1, // Default value for categoryId
         createdAt: DateTime.now(),
         updatedAt: null,
       );

@@ -254,6 +254,55 @@ final class ExpenseController extends GetxController {
                 onTap: () async {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
+                    
+                    if (expense.categoryId == -1) {
+                      if (_categoryIdTextController.text.isNotEmpty) {
+                        final bool result = await Get.dialog(
+                          AlertDialog.adaptive(
+                            title: Text(
+                              'تحذير',
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontSize: 24.sp,
+                                fontFamily: appFontFamily,
+                              ),
+                            ),
+                            content: Text(
+                              'لا يوجد لديك هذا التصنيف "${_categoryIdTextController.text}"، هل تريد إضافته إلى التصنيفات؟',
+                              style: TextStyle(fontFamily: appFontFamily),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Get.back(result: false),
+                                child: Text('إلغاء'),
+                              ),
+                              TextButton(
+                                onPressed: () => Get.back(result: true),
+                                child: Text('موافق'),
+                              ),
+                            ],
+                          ),
+                        );
+                    
+                        if (result) {
+                          final newCategory = Category(
+                            name: _categoryIdTextController.text,
+                            type: CategoryType.expense, // Changed to expense type
+                            createdAt: DateTime.now(),
+                          );
+                    
+                          final category = await DatabaseHelper.create(
+                            model: newCategory,
+                            tableName: Category.tableName,
+                          );
+                    
+                          expense.categoryId = category.id;
+                        } else {
+                          return;
+                        }
+                      }
+                    }
+
                     if (isEditing) {
                       await DatabaseHelper.update(
                         model: expense,

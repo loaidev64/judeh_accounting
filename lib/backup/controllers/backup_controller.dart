@@ -13,13 +13,13 @@ class BackupController extends GetxController {
   final _database = DatabaseHelper.getDatabase();
 
   @override
-  void onReady() {
+  void onInit() {
     Workmanager().registerPeriodicTask(
       "1",
       _backupTask,
       frequency: const Duration(hours: 1),
     );
-    super.onReady();
+    super.onInit();
   }
 
   static void callbackDispatcher() {

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../backup/models/backup.dart';
@@ -95,14 +96,24 @@ abstract class DatabaseHelper {
     }
 
     final database = getDatabase();
-    final count = await database.delete(
-      tableName,
-      where: 'id = ?',
-      whereArgs: [model.id],
-    );
-
-    if (count == 0) {
-      throw Exception('Failed to delete ${T.toString()} ID ${model.id}');
+    try {
+      final count = await database.delete(
+        tableName,
+        where: 'id = ?',
+        whereArgs: [model.id],
+      );
+      if (count == 0) {
+        Get.printError(info: 'Failed to delete ${T.toString()} ID ${model.id}');
+        throw Exception('Failed to delete ${T.toString()} ID ${model.id}');
+      }
+    } catch (e) {
+      Get.printError(info: e.toString());
+      Get.snackbar(
+        'تحذير',
+        'لا يمكنك الحذف',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
