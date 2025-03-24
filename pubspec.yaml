@@ -43,8 +43,8 @@ dependencies:
   just_audio: ^0.9.46
   encrypt: ^5.0.3
   flutter_dotenv: ^5.2.1
-  workmanager: ^0.5.2
   path_provider: ^2.1.5
+  once: ^1.7.0
 
 dev_dependencies:
   flutter_test:

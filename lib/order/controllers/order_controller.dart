@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:judeh_accounting/order/models/order_item.dart';
 import 'package:judeh_accounting/order/screens/order_management_screen.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 

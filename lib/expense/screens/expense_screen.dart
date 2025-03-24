@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
-import 'package:judeh_accounting/shared/category/models/category.dart';
 import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
-import 'package:judeh_accounting/shared/theme/app_colors.dart';
-import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
 import '../controllers/expense_controller.dart';

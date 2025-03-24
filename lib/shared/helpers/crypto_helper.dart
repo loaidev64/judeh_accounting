@@ -2,21 +2,24 @@ import 'package:encrypt/encrypt.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CryptoHelper {
-  // AES-256 with CBC mode and PKCS7 padding
-  static final _aesKey = Key.fromUtf8(dotenv.get('ENCRIPTION_KEY'));
-  static final _iv = IV.fromLength(16);
+  static late final Encrypter _encrypter;
 
-  /// Encrypts text using AES-256-CBC with HMAC-SHA256
-  static String encrypt(String plainText) {
-    final encrypter = Encrypter(AES(_aesKey, mode: AESMode.cbc));
-    final encrypted = encrypter.encrypt(plainText, iv: _iv);
-    return encrypted.base64;
+  static void initialize() {
+    final keyString = dotenv.get('ENCRYPTION_KEY');
+
+    final aesKey = Key.fromUtf8(keyString);
+    _encrypter = Encrypter(AES(aesKey, mode: AESMode.cbc));
   }
 
-  /// Decrypts text using AES-256-CBC with HMAC validation
+  static String encrypt(String plainText) {
+    final iv = IV.fromSecureRandom(16);
+    final encrypted = _encrypter.encrypt(plainText, iv: iv);
+    return "${iv.base64}:${encrypted.base64}";
+  }
+
   static String decrypt(String encryptedText) {
-    final encrypter = Encrypter(AES(_aesKey, mode: AESMode.cbc));
-    final decrypted = encrypter.decrypt64(encryptedText, iv: _iv);
-    return decrypted;
+    final parts = encryptedText.split(':');
+    final iv = IV.fromBase64(parts[0]);
+    return _encrypter.decrypt(Encrypted.fromBase64(parts[1]), iv: iv);
   }
 }
