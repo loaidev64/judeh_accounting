@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart' hide Material;
 import 'package:flutter/material.dart' as m show Material;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/customer/models/customer.dart';
 import 'package:judeh_accounting/customer/models/debt.dart';

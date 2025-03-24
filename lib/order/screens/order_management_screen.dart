@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart' hide Material;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/material/widgets/material_search.dart';
 import 'package:judeh_accounting/order/controllers/order_management_controller.dart';
 import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/order/widgets/order_card.dart';
-import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/extensions/sum_list.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
-import 'package:qr_mobile_vision/qr_camera.dart';
 
-import '../../material/models/material.dart';
 import '../../shared/theme/app_colors.dart';
-import '../../shared/theme/app_text_styles.dart';
 
 class OrderManagementScreen extends StatefulWidget {
   static const routeName = '/orderManagement';

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:once/once.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../shared/helpers/database_helper.dart';
 import '../models/backup.dart';
@@ -14,24 +14,15 @@ class BackupController extends GetxController {
 
   @override
   void onInit() {
-    Workmanager().registerPeriodicTask(
-      "1",
-      _backupTask,
-      frequency: const Duration(hours: 1),
-    );
+    _callbackDispatcher();
     super.onInit();
   }
 
-  static void callbackDispatcher() {
-    Workmanager().executeTask((task, inputData) async {
-      if (task == _backupTask) {
-        final controller = Get.put(BackupController());
-        await controller._createEncryptedBackup();
-        return true;
-      }
-      return false;
-    });
-  }
+  void _callbackDispatcher() async => await Once.runHourly(
+        _backupTask,
+        callback: _createEncryptedBackup,
+        debugCallback: kDebugMode,
+      );
 
   Future<void> _createEncryptedBackup() async {
     try {
@@ -39,17 +30,22 @@ class BackupController extends GetxController {
       final jsonData = jsonEncode(backups);
       final encryptedData = CryptoHelper.encrypt(jsonData);
 
-      final directory = await getApplicationDocumentsDirectory();
+      final directory = await getDownloadsDirectory();
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-      final file = File('${directory.path}/backup_$timestamp.enc');
+      final filePath =
+          '${directory?.path}/judeh_accounting/backup_$timestamp.enc';
+      final file = File(filePath)..createSync(recursive: true);
+
+      Get.printInfo(info: filePath);
 
       await file.writeAsString(encryptedData);
 
-      Get.snackbar('Success', 'Backup created successfully',
-          snackPosition: SnackPosition.BOTTOM);
+      // Get.snackbar('Success', 'Backup created successfully',
+      //     snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to create backup: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red);
+      // Get.snackbar('Error', 'Failed to create backup: ${e.toString()}',
+      //     snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red);
+      Get.printError(info: 'backup error: $e');
     }
   }
 }

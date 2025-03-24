@@ -3,14 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/router/app_router.dart';
 import 'package:judeh_accounting/shared/setups/setup.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await setup();
-
-  await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());
 }
