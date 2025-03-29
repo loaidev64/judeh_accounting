@@ -47,8 +47,8 @@ final class CategoryController extends GetxController {
     return categories.map(Category.fromDatabase).toList();
   }
 
-  Future<void> createCategory() async {
-    final category = Category.empty(CategoryType.material);
+  Future<void> createCategory(CategoryType type) async {
+    final category = Category.empty(type);
     await _showCategoryForm(category);
   }
 
@@ -92,7 +92,10 @@ final class CategoryController extends GetxController {
                 SizedBox(height: 5.h),
                 _buildCategoryDescriptionField(category, isEditing: isEditing),
                 SizedBox(height: 10.h),
-                _buildCategoryActionButtons(category, isEditing: isEditing),
+                Builder(builder: (context) {
+                  return _buildCategoryActionButtons(category,
+                      isEditing: isEditing, context: context);
+                }),
               ],
             ),
           ),
@@ -135,7 +138,7 @@ final class CategoryController extends GetxController {
   }
 
   Widget _buildCategoryActionButtons(Category category,
-      {bool isEditing = false}) {
+      {bool isEditing = false, required BuildContext context}) {
     return Row(
       children: [
         if (isEditing)
@@ -157,6 +160,8 @@ final class CategoryController extends GetxController {
         Expanded(
           child: AppButton(
             onTap: () async {
+              if (!Form.of(context).validate()) return;
+              Form.of(context).save();
               try {
                 if (isEditing) {
                   await DatabaseHelper.update(
@@ -164,6 +169,7 @@ final class CategoryController extends GetxController {
                     tableName: Category.tableName,
                   );
                 } else {
+                  Get.printInfo(info: category.toDatabase.toString());
                   await DatabaseHelper.create(
                     model: category,
                     tableName: Category.tableName,

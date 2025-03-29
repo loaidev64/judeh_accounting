@@ -5,6 +5,7 @@ import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
+import '../../shared/category/models/category.dart';
 import '../controllers/material_controller.dart';
 
 class MaterialScreen extends StatefulWidget {
@@ -31,7 +32,8 @@ class _MaterialScreenState extends State<MaterialScreen> {
         bottomNavBar: AddEditBottomNavBar(
             onAdd: controller.currentPage.value == Screen.material
                 ? controller.createMaterial
-                : controller.categoryController.createCategory,
+                : () async => await controller.categoryController
+                    .createCategory(CategoryType.material),
             onEdit: controller.currentPage.value == Screen.material
                 ? controller.editMaterial
                 : controller.categoryController.editCategory,

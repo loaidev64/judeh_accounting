@@ -41,10 +41,10 @@ class BackupController extends GetxController {
 
       await file.writeAsString(encryptedData);
 
-      Get.snackbar('Success', 'Backup created successfully',
+      Get.snackbar('نجاح', 'تم بنجاح حفظ نسخة احتياطية جديدة',
           snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to create backup: ${e.toString()}',
+      Get.snackbar('خطأ', 'لم يتم حفظ نسخة احتياطية بنجاح',
           snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red);
       Get.printError(info: 'backup error: $e');
     }
