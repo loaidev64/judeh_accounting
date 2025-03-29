@@ -31,10 +31,10 @@ class _MaterialScreenState extends State<MaterialScreen> {
         bottomNavBar: AddEditBottomNavBar(
             onAdd: controller.currentPage.value == Screen.material
                 ? controller.createMaterial
-                : controller.createCategory,
+                : controller.categoryController.createCategory,
             onEdit: controller.currentPage.value == Screen.material
                 ? controller.editMaterial
-                : controller.editCategory,
+                : controller.categoryController.editCategory,
             resourceName: controller.currentPage.value == Screen.material
                 ? 'منتج'
                 : 'تصنيف'),
@@ -99,14 +99,19 @@ class _MaterialScreenState extends State<MaterialScreen> {
                               Header(label: 'الاسم', width: 100.w),
                               Header(label: 'الملاحظات', width: 175.w),
                             ],
-                            itemsCount: controller.categories.length,
+                            itemsCount:
+                                controller.categoryController.categories.length,
                             getData: (index) => [
-                              controller.categories[index].id.toString(),
-                              controller.categories[index].name,
-                              controller.categories[index].description ?? '',
+                              controller.categoryController.categories[index].id
+                                  .toString(),
+                              controller
+                                  .categoryController.categories[index].name,
+                              controller.categoryController.categories[index]
+                                      .description ??
+                                  '',
                             ],
-                            onSelect: (index) =>
-                                controller.selectedCategoryIndex = index,
+                            onSelect: (index) => controller.categoryController
+                                .selectedCategoryIndex = index,
                           ),
               ],
             ),

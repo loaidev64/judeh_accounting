@@ -28,10 +28,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         bottomNavBar: AddEditBottomNavBar(
             onAdd: controller.currentPage.value == Screen.expense
                 ? controller.createExpense
-                : controller.createCategory,
+                : controller.categoryController.createCategory,
             onEdit: controller.currentPage.value == Screen.expense
                 ? controller.editExpense
-                : controller.editCategory,
+                : controller.categoryController.editCategory,
             resourceName: controller.currentPage.value == Screen.expense
                 ? 'مصروف'
                 : 'تصنيف'),
@@ -63,7 +63,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                         ? Column(
                             children: [
                               CategorySearch(
-                                onSearch: controller.returnCategories,
+                                onSearch: controller.categoryController.returnCategories,
                                 onSelected: controller.getExpenses,
                               ),
                               SizedBox(height: 5.h),
@@ -90,14 +90,14 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                               Header(label: 'الاسم', width: 100.w),
                               Header(label: 'الملاحظات', width: 175.w),
                             ],
-                            itemsCount: controller.categories.length,
+                            itemsCount: controller.categoryController.categories.length,
                             getData: (index) => [
-                              controller.categories[index].id.toString(),
-                              controller.categories[index].name,
-                              controller.categories[index].description ?? '',
+                              controller.categoryController.categories[index].id.toString(),
+                              controller.categoryController.categories[index].name,
+                              controller.categoryController.categories[index].description ?? '',
                             ],
                             onSelect: (index) =>
-                                controller.selectedCategoryIndex = index,
+                                controller.categoryController.selectedCategoryIndex = index,
                           ),
               ],
             ),

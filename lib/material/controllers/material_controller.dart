@@ -7,6 +7,7 @@ import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../shared/category/controllers/category_controller.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/widgets.dart';
@@ -18,11 +19,10 @@ enum Screen { material, category }
 final class MaterialController extends GetxController {
   final currentPage = Screen.material.obs;
   final materials = <m.Material>[].obs;
-  final categories = <Category>[].obs;
+  final categoryController = Get.put(CategoryController());
   final loading = false.obs;
 
   int selectedMaterialIndex = -1; // Track selected material for editing
-  int selectedCategoryIndex = -1; // Track selected category for editing
 
   final _idTextController = TextEditingController();
   final _nameTextController = TextEditingController();
@@ -30,7 +30,6 @@ final class MaterialController extends GetxController {
   final _costTextController = TextEditingController();
   final _priceTextController = TextEditingController();
   final _categoryIdTextController = TextEditingController();
-  final _descriptionTextController = TextEditingController();
 
   // Constants for repeated values
   static const _bottomSheetBorderRadius = BorderRadius.only(
@@ -60,14 +59,12 @@ final class MaterialController extends GetxController {
     _costTextController.dispose();
     _priceTextController.dispose();
     _categoryIdTextController.dispose();
-    _descriptionTextController.dispose();
     super.onClose();
   }
 
   /// Resets all fields to their original values.
   void _resetFields() {
     selectedMaterialIndex = -1;
-    selectedCategoryIndex = -1;
 
     _idTextController.clear();
     _nameTextController.clear();
@@ -75,7 +72,7 @@ final class MaterialController extends GetxController {
     _costTextController.clear();
     _priceTextController.clear();
     _categoryIdTextController.clear();
-    _descriptionTextController.clear();
+    categoryController.resetFields();
   }
 
   /// Changes the current page and fetches data accordingly.
@@ -109,9 +106,20 @@ final class MaterialController extends GetxController {
     _resetFields();
   }
 
-  /// Fetches categories from the database.
+  // Remove these from MaterialController:
+  // - selectedCategoryIndex
+  // - _descriptionTextController
+  // - createCategory()
+  // - editCategory()
+  // - _showCategoryForm()
+  // - _buildCategoryNameField()
+  // - _buildCategoryDescriptionField()
+  // - _buildCategoryActionButtons()
+
+  // Update the getCategories method:
   void getCategories() async {
-    categories.value = await returnCategories();
+    categoryController.categories.value =
+        await categoryController.returnCategories();
     _resetFields();
   }
 
@@ -568,164 +576,5 @@ final class MaterialController extends GetxController {
         .first['name'] as String;
 
     await _showMaterialForm(material, isEditing: true);
-  }
-
-  /// Opens a bottom sheet to create a new category.
-  Future<void> createCategory() async {
-    final category = Category.empty(CategoryType.material);
-    await _showCategoryForm(category);
-  }
-
-  /// Opens a bottom sheet to edit an existing category.
-  Future<void> editCategory() async {
-    if (selectedCategoryIndex < 0) {
-      Get.snackbar(
-        'تحذير',
-        'يجب عليك أولاً اختيار فئة',
-        colorText: Colors.white,
-        backgroundColor: Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-        snackStyle: SnackStyle.GROUNDED,
-      );
-      return;
-    }
-
-    final category = categories[selectedCategoryIndex];
-    _idTextController.text = category.id.toString();
-    _nameTextController.text = category.name;
-    _descriptionTextController.text = category.description ?? '';
-
-    await _showCategoryForm(category, isEditing: true);
-  }
-
-  /// Opens a bottom sheet to create or edit a category.
-  Future<void> _showCategoryForm(Category category,
-      {bool isEditing = false}) async {
-    await Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: _bottomSheetBorderRadius,
-          boxShadow: [_bottomSheetBoxShadow],
-        ),
-        height: 356.h,
-        width: double.infinity,
-        padding: _bottomSheetPadding,
-        child: Material(
-          child: Form(
-            child: Column(
-              children: [
-                _buildCategoryNameField(category, isEditing: isEditing),
-                SizedBox(height: 5.h),
-                _buildCategoryDescriptionField(category, isEditing: isEditing),
-                SizedBox(height: 10.h),
-                _buildCategoryActionButtons(category, isEditing: isEditing),
-              ],
-            ),
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-    );
-
-    getCategories(); // Refresh the categories list
-  }
-
-  /// Builds the category name field.
-  Widget _buildCategoryNameField(Category category, {bool isEditing = false}) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppTextFormField(
-            label: 'الاسم',
-            onSaved: (value) => category.name = value ?? '',
-            isRequired: true,
-            controller: isEditing ? _nameTextController : null,
-          ),
-        ),
-        Spacer(),
-      ],
-    );
-  }
-
-  /// Builds the category description field.
-  Widget _buildCategoryDescriptionField(Category category,
-      {bool isEditing = false}) {
-    return AppTextFormField(
-      label: 'ملاحظات',
-      onSaved: (value) => category.description = value,
-      controller: isEditing ? _descriptionTextController : null,
-    );
-  }
-
-  /// Builds the category action buttons (Add/Edit, Delete).
-  Widget _buildCategoryActionButtons(Category category,
-      {bool isEditing = false}) {
-    return Row(
-      children: [
-        if (isEditing)
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                return AppButton(
-                  onTap: () async {
-                    await DatabaseHelper.delete(
-                      model: category,
-                      tableName: Category.tableName,
-                    );
-                    Get.back();
-                  },
-                  text: 'حذف',
-                  color: Colors.red,
-                  icon: 'assets/svgs/delete.svg',
-                );
-              },
-            ),
-          ),
-        if (isEditing) SizedBox(width: 5.w),
-        Expanded(
-          child: Builder(
-            builder: (context) {
-              return AppButton(
-                onTap: () async {
-                  if (Form.of(context).validate()) {
-                    Form.of(context).save();
-                    try {
-                      if (isEditing) {
-                        await DatabaseHelper.update(
-                          model: category,
-                          tableName: Category.tableName,
-                        );
-                      } else {
-                        await DatabaseHelper.create(
-                          model: category,
-                          tableName: Category.tableName,
-                        );
-                      }
-                    } on DatabaseException catch (e) {
-                      if (e.isUniqueConstraintError()) {
-                        Get.snackbar(
-                          'خطأ',
-                          'هذا الاسم موجود مسبقاً، يرجى اختيار اسم آخر',
-                          colorText: Colors.white,
-                          backgroundColor: Colors.red,
-                          snackPosition: SnackPosition.BOTTOM,
-                          snackStyle: SnackStyle.GROUNDED,
-                        );
-                      }
-                      return;
-                    }
-                    Get.back();
-                  }
-                },
-                text: isEditing ? 'تعديل' : 'إضافة',
-                icon:
-                    isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
-              );
-            },
-          ),
-        ),
-      ],
-    );
   }
 }
