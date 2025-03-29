@@ -14,7 +14,7 @@ const _migrations = <Migration>[
   Migration(tableName: Category.tableName, sql: '''
   CREATE TABLE categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,  // Added UNIQUE constraint
     description TEXT,
     type INTEGER,
     createdAt TEXT NOT NULL,

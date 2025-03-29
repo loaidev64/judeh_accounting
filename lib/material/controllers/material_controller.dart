@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -359,6 +361,39 @@ final class MaterialController extends GetxController {
               builder: (context) {
                 return AppButton(
                   onTap: () async {
+                    final database = DatabaseHelper.getDatabase();
+                    final materialHaveChildren = await database.query(
+                      Order.tableName,
+                      columns: ['COUNT(*)'],
+                      where: 'material_id = ?',
+                      whereArgs: [material.id],
+                    );
+                    if (materialHaveChildren.isEmpty ||
+                        materialHaveChildren.first['COUNT(*)'] == 0) {
+                      await Get.dialog(
+                        AlertDialog.adaptive(
+                          title: Text(
+                            'تحذير',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontSize: 24.sp,
+                              fontFamily: appFontFamily,
+                            ),
+                          ),
+                          content: Text(
+                            'لا يمكن حذف هذه المادة لأنها مرتبطة بفواتير.',
+                            style: TextStyle(fontFamily: appFontFamily),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Get.back(result: false),
+                              child: Text('موافق'),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
                     await DatabaseHelper.delete(
                       model: material,
                       tableName: m.Material.tableName,
@@ -655,16 +690,30 @@ final class MaterialController extends GetxController {
                 onTap: () async {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
-                    if (isEditing) {
-                      await DatabaseHelper.update(
-                        model: category,
-                        tableName: Category.tableName,
-                      );
-                    } else {
-                      await DatabaseHelper.create(
-                        model: category,
-                        tableName: Category.tableName,
-                      );
+                    try {
+                      if (isEditing) {
+                        await DatabaseHelper.update(
+                          model: category,
+                          tableName: Category.tableName,
+                        );
+                      } else {
+                        await DatabaseHelper.create(
+                          model: category,
+                          tableName: Category.tableName,
+                        );
+                      }
+                    } on DatabaseException catch (e) {
+                      if (e.isUniqueConstraintError()) {
+                        Get.snackbar(
+                          'خطأ',
+                          'هذا الاسم موجود مسبقاً، يرجى اختيار اسم آخر',
+                          colorText: Colors.white,
+                          backgroundColor: Colors.red,
+                          snackPosition: SnackPosition.BOTTOM,
+                          snackStyle: SnackStyle.GROUNDED,
+                        );
+                      }
+                      return;
                     }
                     Get.back();
                   }

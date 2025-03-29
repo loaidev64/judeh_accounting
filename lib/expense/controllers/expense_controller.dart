@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -254,7 +255,7 @@ final class ExpenseController extends GetxController {
                 onTap: () async {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
-                    
+
                     if (expense.categoryId == -1) {
                       if (_categoryIdTextController.text.isNotEmpty) {
                         final bool result = await Get.dialog(
@@ -283,19 +284,20 @@ final class ExpenseController extends GetxController {
                             ],
                           ),
                         );
-                    
+
                         if (result) {
                           final newCategory = Category(
                             name: _categoryIdTextController.text,
-                            type: CategoryType.expense, // Changed to expense type
+                            type:
+                                CategoryType.expense, // Changed to expense type
                             createdAt: DateTime.now(),
                           );
-                    
+
                           final category = await DatabaseHelper.create(
                             model: newCategory,
                             tableName: Category.tableName,
                           );
-                    
+
                           expense.categoryId = category.id;
                         } else {
                           return;
@@ -480,18 +482,31 @@ final class ExpenseController extends GetxController {
                 onTap: () async {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
-                    if (isEditing) {
-                      await DatabaseHelper.update(
-                        model: category,
-                        tableName: Category.tableName,
-                      );
-                    } else {
-                      await DatabaseHelper.create(
-                        model: category,
-                        tableName: Category.tableName,
-                      );
+                    try {
+                      if (isEditing) {
+                        await DatabaseHelper.update(
+                          model: category,
+                          tableName: Category.tableName,
+                        );
+                      } else {
+                        await DatabaseHelper.create(
+                          model: category,
+                          tableName: Category.tableName,
+                        );
+                      }
+                    } on DatabaseException catch (e) {
+                      if (e.isUniqueConstraintError()) {
+                        Get.snackbar(
+                          'خطأ',
+                          'هذا الاسم موجود مسبقاً، يرجى اختيار اسم آخر',
+                          colorText: Colors.white,
+                          backgroundColor: Colors.red,
+                          snackPosition: SnackPosition.BOTTOM,
+                          snackStyle: SnackStyle.GROUNDED,
+                        );
+                      }
+                      Get.back();
                     }
-                    Get.back();
                   }
                 },
                 text: isEditing ? 'تعديل' : 'إضافة',
