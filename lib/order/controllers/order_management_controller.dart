@@ -32,11 +32,15 @@ final class OrderManagementController extends GetxController {
 
   final quantityController = TextEditingController();
   final priceController = TextEditingController();
+  final customerController = TextEditingController();
+  final companyController = TextEditingController();
 
   @override
   void onClose() {
     quantityController.dispose();
     priceController.dispose();
+    customerController.dispose();
+    companyController.dispose();
     super.onClose();
   }
 
@@ -295,6 +299,7 @@ final class OrderManagementController extends GetxController {
                         (haveCustomer) => Column(
                               children: [
                                 CustomerSearch(
+                                  controller: customerController,
                                   onSearch: returnCustomers,
                                   onSelected: ([cust]) {
                                     haveCustomer.value = cust != null;
@@ -327,6 +332,48 @@ final class OrderManagementController extends GetxController {
                             if (customer != null) {
                               order.customerId = customer!.id;
                               debt.customerId = customer!.id;
+                            } else if (customerController.text.isNotEmpty) {
+                              final bool result = await Get.dialog(
+                                AlertDialog.adaptive(
+                                  title: Text(
+                                    'تحذير',
+                                    style: TextStyle(
+                                      color: AppColors.orange,
+                                      fontSize: 24.sp,
+                                      fontFamily: appFontFamily,
+                                    ),
+                                  ),
+                                  content: Text(
+                                    'لا يوجد لديك هذا الزبون "${customerController.text}"، هل تريد إضافته إلى الزبائن؟',
+                                    style: TextStyle(fontFamily: appFontFamily),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Get.back(result: false),
+                                      child: Text('إلغاء'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Get.back(result: true),
+                                      child: Text('موافق'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (result) {
+                                final newCustomer = Customer(
+                                  name: customerController.text,
+                                );
+
+                                // Create the category and get its ID
+                                final customer = await DatabaseHelper.create(
+                                  model: newCustomer,
+                                  tableName: Customer.tableName,
+                                );
+
+                                order.customerId = customer.id;
+                                debt.customerId = customer.id;
+                              }
                             }
 
                             order = await DatabaseHelper.create(
@@ -387,6 +434,7 @@ final class OrderManagementController extends GetxController {
                         (haveDebt) => Column(
                               children: [
                                 CompanySearch(
+                                  controller: companyController,
                                   onSearch:
                                       returnCompanies, // Changed to use new method
                                   onSelected: ([comp]) {
@@ -419,6 +467,52 @@ final class OrderManagementController extends GetxController {
 
                                         final database =
                                             DatabaseHelper.getDatabase();
+
+                                        if (company.isEmpty &&
+                                            companyController.text.isNotEmpty) {
+                                          final bool result = await Get.dialog(
+                                            AlertDialog.adaptive(
+                                              title: Text(
+                                                'تحذير',
+                                                style: TextStyle(
+                                                  color: AppColors.orange,
+                                                  fontSize: 24.sp,
+                                                  fontFamily: appFontFamily,
+                                                ),
+                                              ),
+                                              content: Text(
+                                                'لا يوجد لديك هذه الشركة "${companyController.text}"، هل تريد إضافته إلى الشركات؟',
+                                                style: TextStyle(
+                                                    fontFamily: appFontFamily),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Get.back(result: false),
+                                                  child: Text('إلغاء'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Get.back(result: true),
+                                                  child: Text('موافق'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+
+                                          if (result) {
+                                            final newCompany = Company(
+                                              name: companyController.text,
+                                            );
+
+                                            // Create the category and get its ID
+                                            company =
+                                                await DatabaseHelper.create(
+                                              model: newCompany,
+                                              tableName: Company.tableName,
+                                            );
+                                          }
+                                        }
 
                                         Order order = Order(
                                           type: type,

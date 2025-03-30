@@ -31,15 +31,6 @@ final class MaterialController extends GetxController {
   final _priceTextController = TextEditingController();
   final _categoryIdTextController = TextEditingController();
 
-  // Constants for repeated values
-  static const _bottomSheetBorderRadius = BorderRadius.only(
-    topLeft: Radius.circular(15),
-    topRight: Radius.circular(15),
-  );
-  static const _bottomSheetBoxShadow = BoxShadow(
-    color: AppColors.primary,
-    offset: Offset(0, -10),
-  );
   static const _bottomSheetPadding = EdgeInsets.symmetric(
     horizontal: 10,
     vertical: 10,
@@ -105,16 +96,6 @@ final class MaterialController extends GetxController {
     loading.value = false;
     _resetFields();
   }
-
-  // Remove these from MaterialController:
-  // - selectedCategoryIndex
-  // - _descriptionTextController
-  // - createCategory()
-  // - editCategory()
-  // - _showCategoryForm()
-  // - _buildCategoryNameField()
-  // - _buildCategoryDescriptionField()
-  // - _buildCategoryActionButtons()
 
   // Update the getCategories method:
   void getCategories() async {

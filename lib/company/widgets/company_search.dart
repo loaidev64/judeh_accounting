@@ -12,17 +12,19 @@ class CompanySearch extends StatefulWidget {
     super.key,
     required this.onSearch,
     required this.onSelected,
+    this.controller,
   });
 
   final Future<List<Company>> Function(String? search) onSearch;
   final void Function([Company? company]) onSelected;
+  final TextEditingController? controller;
 
   @override
   State<CompanySearch> createState() => _CompanySearchState();
 }
 
 class _CompanySearchState extends State<CompanySearch> {
-  final companyController = TextEditingController();
+  late final companyController = widget.controller ?? TextEditingController();
 
   @override
   Widget build(BuildContext context) {
