@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:once/once.dart';
 import 'package:path_provider/path_provider.dart';
@@ -40,11 +41,11 @@ class BackupController extends GetxController {
 
       await file.writeAsString(encryptedData);
 
-      // Get.snackbar('Success', 'Backup created successfully',
-      //     snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('نجاح', 'تم بنجاح حفظ نسخة احتياطية جديدة',
+          snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      // Get.snackbar('Error', 'Failed to create backup: ${e.toString()}',
-      //     snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red);
+      Get.snackbar('خطأ', 'لم يتم حفظ نسخة احتياطية بنجاح',
+          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red);
       Get.printError(info: 'backup error: $e');
     }
   }

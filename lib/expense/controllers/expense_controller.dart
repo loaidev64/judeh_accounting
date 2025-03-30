@@ -3,11 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/widgets.dart';
 import '../../shared/category/models/category.dart';
+import '../../shared/category/controllers/category_controller.dart'; // Import CategoryController
 import '../models/expense.dart';
 
 enum Screen { expense, category }
@@ -15,11 +17,11 @@ enum Screen { expense, category }
 final class ExpenseController extends GetxController {
   final currentPage = Screen.expense.obs;
   final expenses = <Expense>[].obs;
-  final categories = <Category>[].obs;
+  final categoryController =
+      Get.put(CategoryController()); // Use CategoryController
   final loading = false.obs;
 
   int selectedExpenseIndex = -1; // Track selected expense for editing
-  int selectedCategoryIndex = -1; // Track selected category for editing
 
   final _nameTextController = TextEditingController();
   final _costTextController = TextEditingController();
@@ -57,12 +59,12 @@ final class ExpenseController extends GetxController {
   /// Resets all fields to their original values.
   void _resetFields() {
     selectedExpenseIndex = -1;
-    selectedCategoryIndex = -1;
 
     _costTextController.clear();
     _descriptionTextController.clear();
     _categoryIdTextController.clear();
     _nameTextController.clear();
+    categoryController.resetFields(); // Reset category fields
   }
 
   /// Changes the current page and fetches data accordingly.
@@ -98,25 +100,9 @@ final class ExpenseController extends GetxController {
 
   /// Fetches categories from the database.
   void getCategories() async {
-    categories.value = await returnCategories();
+    categoryController.categories.value =
+        await categoryController.returnCategories();
     _resetFields();
-  }
-
-  /// Returns a list of categories, optionally filtered by search.
-  Future<List<Category>> returnCategories([String? search]) async {
-    final List<Map<String, Object?>> categories;
-    if (search == null) {
-      categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: 'type = ?',
-          whereArgs: [CategoryType.expense.index],
-          limit: 25);
-    } else {
-      categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: "name LIKE ? AND type = ?",
-          whereArgs: ['%$search%', CategoryType.expense.index],
-          limit: 25);
-    }
-    return categories.map(Category.fromDatabase).toList();
   }
 
   /// Opens a bottom sheet to create or edit an expense.
@@ -183,7 +169,8 @@ final class ExpenseController extends GetxController {
   /// Builds the category field using TypeAhead.
   Widget _buildCategoryField(Expense expense, {bool isEditing = false}) {
     return TypeAheadField<Category>(
-      suggestionsCallback: returnCategories,
+      suggestionsCallback:
+          categoryController.returnCategories, // Use CategoryController
       controller: _categoryIdTextController,
       builder: (context, controller, focusNode) {
         return Column(
@@ -254,7 +241,7 @@ final class ExpenseController extends GetxController {
                 onTap: () async {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
-                    
+
                     if (expense.categoryId == -1) {
                       if (_categoryIdTextController.text.isNotEmpty) {
                         final bool result = await Get.dialog(
@@ -283,19 +270,20 @@ final class ExpenseController extends GetxController {
                             ],
                           ),
                         );
-                    
+
                         if (result) {
                           final newCategory = Category(
                             name: _categoryIdTextController.text,
-                            type: CategoryType.expense, // Changed to expense type
+                            type:
+                                CategoryType.expense, // Changed to expense type
                             createdAt: DateTime.now(),
                           );
-                    
+
                           final category = await DatabaseHelper.create(
                             model: newCategory,
                             tableName: Category.tableName,
                           );
-                    
+
                           expense.categoryId = category.id;
                         } else {
                           return;
@@ -359,149 +347,5 @@ final class ExpenseController extends GetxController {
         .first['name'] as String;
 
     await _showExpenseForm(expense, isEditing: true);
-  }
-
-  /// Opens a bottom sheet to create a new category.
-  Future<void> createCategory() async {
-    final category = Category.empty(CategoryType.expense);
-    await _showCategoryForm(category);
-  }
-
-  /// Opens a bottom sheet to edit an existing category.
-  Future<void> editCategory() async {
-    if (selectedCategoryIndex < 0) {
-      Get.snackbar(
-        'تحذير',
-        'يجب عليك أولاً اختيار فئة',
-        colorText: Colors.white,
-        backgroundColor: Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-        snackStyle: SnackStyle.GROUNDED,
-      );
-      return;
-    }
-
-    final category = categories[selectedCategoryIndex];
-    _nameTextController.text = category.name.toString();
-    _descriptionTextController.text = category.description ?? '';
-
-    await _showCategoryForm(category, isEditing: true);
-  }
-
-  /// Opens a bottom sheet to create or edit a category.
-  Future<void> _showCategoryForm(Category category,
-      {bool isEditing = false}) async {
-    await Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: _bottomSheetBorderRadius,
-          boxShadow: [_bottomSheetBoxShadow],
-        ),
-        height: 356.h,
-        width: double.infinity,
-        padding: _bottomSheetPadding,
-        child: Material(
-          child: Form(
-            child: Column(
-              children: [
-                _buildCategoryNameField(category, isEditing: isEditing),
-                SizedBox(height: 5.h),
-                _buildCategoryDescriptionField(category, isEditing: isEditing),
-                SizedBox(height: 10.h),
-                _buildCategoryActionButtons(category, isEditing: isEditing),
-              ],
-            ),
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-    );
-
-    getCategories(); // Refresh the categories list
-  }
-
-  /// Builds the category name field.
-  Widget _buildCategoryNameField(Category category, {bool isEditing = false}) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppTextFormField(
-            label: 'الاسم',
-            onSaved: (value) => category.name = value ?? '',
-            isRequired: true,
-            controller: isEditing ? _nameTextController : null,
-          ),
-        ),
-        Spacer(),
-      ],
-    );
-  }
-
-  /// Builds the category description field.
-  Widget _buildCategoryDescriptionField(Category category,
-      {bool isEditing = false}) {
-    return AppTextFormField(
-      label: 'ملاحظات',
-      onSaved: (value) => category.description = value,
-      controller: isEditing ? _descriptionTextController : null,
-    );
-  }
-
-  /// Builds the category action buttons (Add/Edit, Delete).
-  Widget _buildCategoryActionButtons(Category category,
-      {bool isEditing = false}) {
-    return Row(
-      children: [
-        if (isEditing)
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                return AppButton(
-                  onTap: () async {
-                    await DatabaseHelper.delete(
-                      model: category,
-                      tableName: Category.tableName,
-                    );
-                    Get.back();
-                  },
-                  text: 'حذف',
-                  color: Colors.red,
-                  icon: 'assets/svgs/delete.svg',
-                );
-              },
-            ),
-          ),
-        if (isEditing) SizedBox(width: 5.w),
-        Expanded(
-          child: Builder(
-            builder: (context) {
-              return AppButton(
-                onTap: () async {
-                  if (Form.of(context).validate()) {
-                    Form.of(context).save();
-                    if (isEditing) {
-                      await DatabaseHelper.update(
-                        model: category,
-                        tableName: Category.tableName,
-                      );
-                    } else {
-                      await DatabaseHelper.create(
-                        model: category,
-                        tableName: Category.tableName,
-                      );
-                    }
-                    Get.back();
-                  }
-                },
-                text: isEditing ? 'تعديل' : 'إضافة',
-                icon:
-                    isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
-              );
-            },
-          ),
-        ),
-      ],
-    );
   }
 }

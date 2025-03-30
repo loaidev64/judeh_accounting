@@ -12,18 +12,21 @@ class CustomerSearch extends StatefulWidget {
     super.key,
     required this.onSearch,
     required this.onSelected,
+    this.controller,
   });
 
   final Future<List<Customer>> Function(String? search) onSearch;
 
   final void Function([Customer? customer]) onSelected;
 
+  final TextEditingController? controller;
+
   @override
   State<CustomerSearch> createState() => _CustomerSearchState();
 }
 
 class _CustomerSearchState extends State<CustomerSearch> {
-  final customerController = TextEditingController();
+  late final customerController = widget.controller ?? TextEditingController();
 
   @override
   Widget build(BuildContext context) {
