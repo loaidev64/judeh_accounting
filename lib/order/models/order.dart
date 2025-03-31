@@ -10,6 +10,8 @@ final class Order extends DatabaseModel {
 
   double total;
 
+  double? debtAmount;
+
   final List<OrderItem> items;
 
   Order({
@@ -19,6 +21,7 @@ final class Order extends DatabaseModel {
     required this.type,
     required this.total,
     required this.items,
+    this.debtAmount,
     super.createdAt,
     super.updatedAt,
   });
@@ -35,6 +38,7 @@ final class Order extends DatabaseModel {
                 .map((e) => OrderItem.fromDatabase(e))
                 .toList()
             : [],
+        debtAmount: map['debt_amount'] as double?,
         createdAt: DateTime.parse(map['createdAt'] as String),
         updatedAt: map['updatedAt'] != null
             ? DateTime.parse(map['updatedAt'] as String)

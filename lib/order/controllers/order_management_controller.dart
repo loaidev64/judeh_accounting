@@ -32,6 +32,7 @@ final class OrderManagementController extends GetxController {
 
   final quantityController = TextEditingController();
   final priceController = TextEditingController();
+  final materialController = TextEditingController();
   final customerController = TextEditingController();
   final companyController = TextEditingController();
 
@@ -41,6 +42,7 @@ final class OrderManagementController extends GetxController {
     priceController.dispose();
     customerController.dispose();
     companyController.dispose();
+    materialController.dispose();
     super.onClose();
   }
 
@@ -274,11 +276,14 @@ final class OrderManagementController extends GetxController {
     }
     toggleAddedNewItem();
 
+    materialController.clear();
+
     editItem(items.length - 1);
   }
 
   Future<void> create() async {
     final debt = Debt.empty();
+    bool successful = false;
     if (type.canHaveCustomer) {
       Customer? customer;
       await Get.bottomSheet(
@@ -300,6 +305,8 @@ final class OrderManagementController extends GetxController {
                               children: [
                                 CustomerSearch(
                                   controller: customerController,
+                                  onChanged: (value) => haveCustomer.value =
+                                      value.trim().isNotEmpty,
                                   onSearch: returnCustomers,
                                   onSelected: ([cust]) {
                                     haveCustomer.value = cust != null;
@@ -366,13 +373,14 @@ final class OrderManagementController extends GetxController {
                                 );
 
                                 // Create the category and get its ID
-                                final customer = await DatabaseHelper.create(
+                                final cust = await DatabaseHelper.create(
                                   model: newCustomer,
                                   tableName: Customer.tableName,
                                 );
 
-                                order.customerId = customer.id;
-                                debt.customerId = customer.id;
+                                customer = cust;
+                                order.customerId = cust.id;
+                                debt.customerId = cust.id;
                               }
                             }
 
@@ -401,7 +409,7 @@ final class OrderManagementController extends GetxController {
                               await DatabaseHelper.create(
                                   model: debt, tableName: Debt.tableName);
                             }
-
+                            successful = true;
                             Get.back();
                           }
                         },
@@ -551,6 +559,7 @@ final class OrderManagementController extends GetxController {
                                               tableName: Debt.tableName);
                                         }
 
+                                        successful = true;
                                         Get.back();
                                       }
                                     },
@@ -567,8 +576,7 @@ final class OrderManagementController extends GetxController {
           ),
           isScrollControlled: true);
     }
-
-    Get.back();
+    if (successful) Get.back();
   }
 
   void onScanBarcode(String? barcode) async {

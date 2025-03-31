@@ -27,10 +27,22 @@ final class OrderController extends GetxController {
 
     final database = DatabaseHelper.getDatabase();
 
+    Get.printInfo(info: (await database.query('customers')).toString());
+
     // Fetch orders based on the current type
     final orderData = await database.query(
-      Order.tableName,
+      'orders LEFT JOIN debts ON orders.id = debts.order_id',
       where: 'type = ?',
+      columns: [
+        'orders.id',
+        'orders.customer_id',
+        'orders.company_id',
+        'orders.type',
+        'orders.total',
+        'orders.createdAt',
+        'orders.updatedAt',
+        'debts.amount AS debt_amount',
+      ],
       whereArgs: [currentType.value.index],
       limit: 25,
     );

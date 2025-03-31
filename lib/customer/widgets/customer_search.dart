@@ -13,6 +13,7 @@ class CustomerSearch extends StatefulWidget {
     required this.onSearch,
     required this.onSelected,
     this.controller,
+    this.onChanged,
   });
 
   final Future<List<Customer>> Function(String? search) onSearch;
@@ -20,6 +21,8 @@ class CustomerSearch extends StatefulWidget {
   final void Function([Customer? customer]) onSelected;
 
   final TextEditingController? controller;
+
+  final void Function(String)? onChanged;
 
   @override
   State<CustomerSearch> createState() => _CustomerSearchState();
@@ -33,6 +36,8 @@ class _CustomerSearchState extends State<CustomerSearch> {
     return TypeAheadField<Customer>(
       suggestionsCallback: widget.onSearch,
       controller: customerController,
+      hideKeyboardOnDrag: true,
+      hideOnSelect: true,
       builder: (context, controller, focusNode) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,6 +49,7 @@ class _CustomerSearchState extends State<CustomerSearch> {
             TextField(
               controller: controller,
               focusNode: focusNode,
+              onChanged: widget.onChanged,
               decoration: InputDecoration(
                 suffix: GestureDetector(
                   onTap: () {

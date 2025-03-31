@@ -13,24 +13,29 @@ class MaterialSearch extends StatefulWidget {
     super.key,
     required this.onSearch,
     required this.onSelected,
+    this.controller,
   });
 
   final Future<List<Material>> Function(String? search) onSearch;
 
   final void Function([Material? material]) onSelected;
 
+  final TextEditingController? controller;
+
   @override
   State<MaterialSearch> createState() => _MaterialSearchState();
 }
 
 class _MaterialSearchState extends State<MaterialSearch> {
-  final materialController = TextEditingController();
+  late final materialController = widget.controller ?? TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return TypeAheadField<Material>(
       suggestionsCallback: widget.onSearch,
       controller: materialController,
+      hideKeyboardOnDrag: true,
+      hideOnSelect: true,
       builder: (context, controller, focusNode) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
