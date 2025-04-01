@@ -5,7 +5,7 @@ import 'package:judeh_accounting/material/widgets/material_search.dart';
 import 'package:judeh_accounting/order/controllers/order_management_controller.dart';
 import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/order/widgets/order_card.dart';
-import 'package:judeh_accounting/shared/extensions/sum_list.dart';
+import 'package:judeh_accounting/shared/extensions/order_item_list.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 
 import '../../shared/theme/app_colors.dart';
@@ -45,7 +45,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                               ? AppBarcodeQrcodeScanner(
                                   onScan: controller.onScanBarcode)
                               : MaterialSearch(
-                                controller: controller.materialController,
+                                  controller: controller.materialController,
                                   onSearch: controller.returnMaterials,
                                   onSelected: ([material]) {
                                     if (material == null) {
@@ -74,7 +74,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
               ),
               SizedBox(height: 5.h),
               AppButton(
-                onTap: controller.create,
+                onTap: controller.save,
                 text: '${controller.order == null ? 'إضافة' : 'تعديل'} فاتورة',
                 icon: 'assets/svgs/plus.svg',
               ),

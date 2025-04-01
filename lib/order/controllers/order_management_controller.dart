@@ -8,7 +8,7 @@ import 'package:judeh_accounting/customer/widgets/customer_search.dart';
 import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/order/models/order_item.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
-import 'package:judeh_accounting/shared/extensions/sum_list.dart';
+import 'package:judeh_accounting/shared/extensions/order_item_list.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import 'package:just_audio/just_audio.dart';
@@ -43,6 +43,7 @@ final class OrderManagementController extends GetxController {
     customerController.dispose();
     companyController.dispose();
     materialController.dispose();
+
     super.onClose();
   }
 
@@ -53,10 +54,32 @@ final class OrderManagementController extends GetxController {
     this.order = order;
 
     if (order != null) {
-      items.addAll(order.items);
+      _loadItem(order);
     }
 
     super.onInit();
+  }
+
+  void _loadItem(Order order) async {
+    final materialsData = await DatabaseHelper.getDatabase().query(
+      Material.tableName,
+      columns: [
+        'id',
+        'name',
+        'unit',
+      ],
+      distinct: true,
+      where:
+          'id in (${List.generate(order.items.length, (_) => '?').join(',')})',
+      whereArgs: order.items.map((e) => e.materialId).toList(),
+    );
+
+    items.addAll(order.items.map((item) => item.copyWith(
+          materialName: materialsData.firstWhere(
+              (element) => element['id'] == item.materialId)['name'] as String,
+          materialUnit: Unit.values[materialsData.firstWhere(
+              (element) => element['id'] == item.materialId)['unit'] as int],
+        )));
   }
 
   Future<List<Material>> returnMaterials([String? search]) async {
@@ -121,66 +144,13 @@ final class OrderManagementController extends GetxController {
             borderRadius: _bottomSheetBorderRadius,
             boxShadow: [_bottomSheetBoxShadow],
           ),
-          height: 256.h,
+          height: 200.h,
           width: double.infinity,
           padding: _bottomSheetPadding,
           child: m.Material(
             child: Form(
               child: Column(
                 children: [
-                  // Builder(builder: (context) {
-                  //   return TypeAheadField<Material>(
-                  //     controller: materialController,
-                  //     emptyBuilder: (context) => Padding(
-                  //       padding: EdgeInsets.all(10.w),
-                  //       child: Text('لا يوجد أي نتائج'),
-                  //     ),
-                  //     itemBuilder: (context, material) {
-                  //       return ListTile(
-                  //         title: Text(material.name),
-                  //         subtitle: Text(material.price.toPriceString),
-                  //       );
-                  //     },
-                  //     onSelected: (material) {
-                  //       materialController.text = material.name;
-                  //       this.material.value = material;
-                  //       priceController.text = material.price.toInt().toString();
-                  //       quantityController.text = 1.toString();
-                  //       FocusScope.of(context).nextFocus();
-                  //     },
-                  //     suggestionsCallback: returnMaterials,
-                  //     builder: (context, controller, focusNode) => Column(
-                  //       crossAxisAlignment: CrossAxisAlignment.start,
-                  //       children: [
-                  //         Text(
-                  //           'المنتج',
-                  //           style: AppTextStyles.appTextFormFieldLabel,
-                  //         ),
-                  //         TextFormField(
-                  //           controller: controller,
-                  //           focusNode: focusNode,
-                  //           decoration: InputDecoration(
-                  //             suffix: GestureDetector(
-                  //               onTap: () {
-                  //                 controller.clear();
-                  //               },
-                  //               child: Icon(
-                  //                 Icons.close,
-                  //                 color: AppColors.primary,
-                  //               ),
-                  //             ),
-                  //             border: AppTextFormField.border(),
-                  //             enabledBorder: AppTextFormField.border(),
-                  //             focusedBorder: AppTextFormField.border(),
-                  //             disabledBorder: AppTextFormField.border(),
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   );
-                  // }),
-
-                  // SizedBox(height: 5.h),
                   Row(
                     children: [
                       Expanded(
@@ -190,6 +160,15 @@ final class OrderManagementController extends GetxController {
                           autofocus: true,
                           controller: quantityController,
                           keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value != null &&
+                                !value.isNumericOnly &&
+                                item.materialUnit! == Unit.amount) {
+                              return 'يجب ان يكون بلا فاصلة';
+                            }
+
+                            return null;
+                          },
                           suffix: item.materialUnit != null
                               ? Text(
                                   item.materialUnit!.name,
@@ -281,11 +260,22 @@ final class OrderManagementController extends GetxController {
     editItem(items.length - 1);
   }
 
-  Future<void> create() async {
-    final debt = Debt.empty();
+  Future<void> save() async {
+    Debt debt = Debt.empty();
     bool successful = false;
     if (type.canHaveCustomer) {
       Customer? customer;
+      if (order?.customerId case final int customerId) {
+        final customerData = await DatabaseHelper.getDatabase().query(
+          Customer.tableName,
+          where: 'id = ?',
+          whereArgs: [customerId],
+        );
+        if (customerData.isNotEmpty) {
+          customer = Customer.fromDatabase(customerData.first);
+          customerController.text = customer.name;
+        }
+      }
       await Get.bottomSheet(
           Container(
             decoration: BoxDecoration(
@@ -293,7 +283,7 @@ final class OrderManagementController extends GetxController {
               borderRadius: _bottomSheetBorderRadius,
               boxShadow: [_bottomSheetBoxShadow],
             ),
-            height: 356.h,
+            height: 256.h,
             width: double.infinity,
             padding: _bottomSheetPadding,
             child: m.Material(
@@ -334,58 +324,91 @@ final class OrderManagementController extends GetxController {
 
                             final database = DatabaseHelper.getDatabase();
 
-                            Order order = Order(
-                                type: type, total: items.total, items: items);
+                            Order order = this.order?.copyWith(
+                                      total: items.total,
+                                      items: items,
+                                    ) ??
+                                Order(
+                                    type: type,
+                                    total: items.total,
+                                    items: items);
                             if (customer != null) {
                               order.customerId = customer!.id;
                               debt.customerId = customer!.id;
                             } else if (customerController.text.isNotEmpty) {
-                              final bool result = await Get.dialog(
-                                AlertDialog.adaptive(
-                                  title: Text(
-                                    'تحذير',
-                                    style: TextStyle(
-                                      color: AppColors.orange,
-                                      fontSize: 24.sp,
-                                      fontFamily: appFontFamily,
-                                    ),
-                                  ),
-                                  content: Text(
-                                    'لا يوجد لديك هذا الزبون "${customerController.text}"، هل تريد إضافته إلى الزبائن؟',
-                                    style: TextStyle(fontFamily: appFontFamily),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Get.back(result: false),
-                                      child: Text('إلغاء'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => Get.back(result: true),
-                                      child: Text('موافق'),
-                                    ),
-                                  ],
-                                ),
+                              final customerData = await database.query(
+                                Customer.tableName,
+                                where: 'name = ?',
+                                whereArgs: [customerController.text],
                               );
-
-                              if (result) {
-                                final newCustomer = Customer(
-                                  name: customerController.text,
-                                );
-
-                                // Create the category and get its ID
-                                final cust = await DatabaseHelper.create(
-                                  model: newCustomer,
-                                  tableName: Customer.tableName,
-                                );
-
+                              if (customerData.isNotEmpty) {
+                                final cust =
+                                    Customer.fromDatabase(customerData.first);
                                 customer = cust;
                                 order.customerId = cust.id;
                                 debt.customerId = cust.id;
+                              } else {
+                                final bool result = await Get.dialog(
+                                  AlertDialog.adaptive(
+                                    title: Text(
+                                      'تحذير',
+                                      style: TextStyle(
+                                        color: AppColors.orange,
+                                        fontSize: 24.sp,
+                                        fontFamily: appFontFamily,
+                                      ),
+                                    ),
+                                    content: Text(
+                                      'لا يوجد لديك هذا الزبون "${customerController.text}"، هل تريد إضافته إلى الزبائن؟',
+                                      style:
+                                          TextStyle(fontFamily: appFontFamily),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Get.back(result: false),
+                                        child: Text('إلغاء'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Get.back(result: true),
+                                        child: Text('موافق'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (result) {
+                                  final newCustomer = Customer(
+                                    name: customerController.text,
+                                  );
+
+                                  // Create the category and get its ID
+                                  final cust = await DatabaseHelper.create(
+                                    model: newCustomer,
+                                    tableName: Customer.tableName,
+                                  );
+
+                                  customer = cust;
+                                  order.customerId = cust.id;
+                                  debt.customerId = cust.id;
+                                }
                               }
                             }
 
-                            order = await DatabaseHelper.create(
-                                model: order, tableName: Order.tableName);
+                            if (this.order != null) {
+                              order = await DatabaseHelper.update(
+                                  model: order, tableName: Order.tableName);
+                            } else {
+                              order = await DatabaseHelper.create(
+                                  model: order, tableName: Order.tableName);
+                            }
+
+                            if (this.order != null) {
+                              await this
+                                  .order!
+                                  .items
+                                  .delete(type); // delete old items
+                            }
 
                             for (final item in items) {
                               await DatabaseHelper.create(
@@ -405,6 +428,14 @@ final class OrderManagementController extends GetxController {
                             }
 
                             if (customer != null) {
+                              if (this.order?.debtAmount case final double _) {
+                                final debtData = await database.query(
+                                  Debt.tableName,
+                                  where: 'order_id =?',
+                                  whereArgs: [order.id],
+                                );
+                                debt = Debt.fromDatabase(debtData.first);
+                              }
                               debt.orderId = order.id;
                               await DatabaseHelper.create(
                                   model: debt, tableName: Debt.tableName);
@@ -664,10 +695,12 @@ final class OrderManagementController extends GetxController {
     topLeft: Radius.circular(15),
     topRight: Radius.circular(15),
   );
+
   static const _bottomSheetBoxShadow = BoxShadow(
     color: AppColors.primary,
     offset: Offset(0, -10),
   );
+
   static const _bottomSheetPadding = EdgeInsets.symmetric(
     horizontal: 10,
     vertical: 10,

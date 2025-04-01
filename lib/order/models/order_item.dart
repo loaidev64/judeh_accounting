@@ -71,6 +71,7 @@ class OrderItem extends DatabaseModel {
   OrderItem copyWith({
     int? materialId,
     String? materialName,
+    Unit? materialUnit,
     double? price,
     double? quantity,
     int? orderId,
@@ -78,6 +79,7 @@ class OrderItem extends DatabaseModel {
     return OrderItem(
       materialId: materialId ?? this.materialId,
       materialName: materialName ?? this.materialName,
+      materialUnit: materialUnit ?? this.materialUnit,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
       orderId: orderId ?? this.orderId,

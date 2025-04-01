@@ -70,6 +70,29 @@ final class Order extends DatabaseModel {
       };
 
   static const tableName = 'orders';
+
+  Order copyWith({
+    int? id,
+    int? customerId,
+    int? companyId,
+    OrderType? type,
+    double? total,
+    double? debtAmount,
+    List<OrderItem>? items,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) =>
+      Order(
+        id: id ?? this.id,
+        customerId: customerId ?? this.customerId,
+        companyId: companyId ?? this.companyId,
+        type: type ?? this.type,
+        total: total ?? this.total,
+        items: items ?? this.items,
+        debtAmount: debtAmount ?? this.debtAmount,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
 }
 
 enum OrderType {
