@@ -73,10 +73,26 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                 ),
               ),
               SizedBox(height: 5.h),
-              AppButton(
-                onTap: controller.save,
-                text: '${controller.order == null ? 'إضافة' : 'تعديل'} فاتورة',
-                icon: 'assets/svgs/plus.svg',
+              Row(
+                children: [
+                  if (controller.order != null)
+                    Expanded(
+                      child: AppButton(
+                        onTap: controller.delete,
+                        text: 'حذف',
+                        color: Colors.red,
+                        icon: 'assets/svgs/delete.svg',
+                      ),
+                    ),
+                  if (controller.order != null) SizedBox(width: 5.w),
+                  Expanded(
+                    child: AppButton(
+                      onTap: controller.save,
+                      text: '${controller.order == null ? 'إضافة' : 'تعديل'} فاتورة',
+                      icon: 'assets/svgs/plus.svg',
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
