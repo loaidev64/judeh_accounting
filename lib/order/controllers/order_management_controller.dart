@@ -26,6 +26,12 @@ final class OrderManagementController extends GetxController {
 
   Order? order;
 
+  Debt? debt;
+
+  Customer? customer;
+
+  Company? company;
+
   late OrderType type;
 
   final items = <OrderItem>[].obs;
@@ -33,6 +39,7 @@ final class OrderManagementController extends GetxController {
   final quantityController = TextEditingController();
   final priceController = TextEditingController();
   final materialController = TextEditingController();
+  final debtController = TextEditingController();
   final customerController = TextEditingController();
   final companyController = TextEditingController();
 
@@ -40,9 +47,10 @@ final class OrderManagementController extends GetxController {
   void onClose() {
     quantityController.dispose();
     priceController.dispose();
+    materialController.dispose();
+    debtController.dispose();
     customerController.dispose();
     companyController.dispose();
-    materialController.dispose();
 
     super.onClose();
   }
@@ -55,9 +63,39 @@ final class OrderManagementController extends GetxController {
 
     if (order != null) {
       _loadItem(order);
+      _loadDebtIfExsists(order);
+      if (!type.canHaveCustomer) {
+        _loadCompany(order);
+      }
     }
 
     super.onInit();
+  }
+
+  void _loadDebtIfExsists(Order order) async {
+    final debtData = await DatabaseHelper.getDatabase().query(
+      Debt.tableName,
+      where: 'order_id = ?',
+      whereArgs: [order.id],
+    );
+
+    if (debtData.isNotEmpty) {
+      debt = Debt.fromDatabase(debtData.first);
+
+      debtController.text = debt!.amount.toPriceString;
+
+      if (!type.canHaveCustomer) return;
+
+      final customerData = await DatabaseHelper.getDatabase().query(
+        Customer.tableName,
+        where: 'id = ?',
+        whereArgs: [debt!.customerId],
+      );
+
+      customer = Customer.fromDatabase(customerData.first);
+
+      customerController.text = customer!.name;
+    }
   }
 
   void _loadItem(Order order) async {
@@ -80,6 +118,18 @@ final class OrderManagementController extends GetxController {
           materialUnit: Unit.values[materialsData.firstWhere(
               (element) => element['id'] == item.materialId)['unit'] as int],
         )));
+  }
+
+  void _loadCompany(Order order) async {
+    final companyData = await DatabaseHelper.getDatabase().query(
+      Company.tableName,
+      where: 'id = ?',
+      whereArgs: [order.companyId],
+    );
+
+    company = Company.fromDatabase(companyData.first);
+
+    companyController.text = company!.name;
   }
 
   Future<List<Material>> returnMaterials([String? search]) async {
@@ -261,21 +311,9 @@ final class OrderManagementController extends GetxController {
   }
 
   Future<void> save() async {
-    Debt debt = Debt.empty();
+    final debt = this.debt ?? Debt.empty();
     bool successful = false;
     if (type.canHaveCustomer) {
-      Customer? customer;
-      if (order?.customerId case final int customerId) {
-        final customerData = await DatabaseHelper.getDatabase().query(
-          Customer.tableName,
-          where: 'id = ?',
-          whereArgs: [customerId],
-        );
-        if (customerData.isNotEmpty) {
-          customer = Customer.fromDatabase(customerData.first);
-          customerController.text = customer.name;
-        }
-      }
       await Get.bottomSheet(
           Container(
             decoration: BoxDecoration(
@@ -306,7 +344,8 @@ final class OrderManagementController extends GetxController {
                                 SizedBox(height: 5.h),
                                 if (haveCustomer.value)
                                   AppTextFormField(
-                                    label: 'آجل',
+                                    controller: debtController,
+                                    label: 'مقبوض',
                                     keyboardType: TextInputType.number,
                                     onSaved: (value) => debt.amount =
                                         double.tryParse(value ?? '') ?? 0,
@@ -428,17 +467,14 @@ final class OrderManagementController extends GetxController {
                             }
 
                             if (customer != null) {
-                              if (this.order?.debtAmount case final double _) {
-                                final debtData = await database.query(
-                                  Debt.tableName,
-                                  where: 'order_id =?',
-                                  whereArgs: [order.id],
-                                );
-                                debt = Debt.fromDatabase(debtData.first);
+                              if (this.debt != null) {
+                                await DatabaseHelper.update(
+                                    model: debt, tableName: Debt.tableName);
+                              } else {
+                                debt.orderId = order.id;
+                                await DatabaseHelper.create(
+                                    model: debt, tableName: Debt.tableName);
                               }
-                              debt.orderId = order.id;
-                              await DatabaseHelper.create(
-                                  model: debt, tableName: Debt.tableName);
                             }
                             successful = true;
                             Get.back();
@@ -454,7 +490,7 @@ final class OrderManagementController extends GetxController {
           ),
           isScrollControlled: true);
     } else {
-      Company company = Company.empty();
+      Company company = this.company ?? Company.empty();
       await Get.bottomSheet(
           Container(
             decoration: BoxDecoration(

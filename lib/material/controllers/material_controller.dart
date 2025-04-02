@@ -5,7 +5,6 @@ import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../../shared/category/controllers/category_controller.dart';
 import '../../shared/theme/app_colors.dart';
