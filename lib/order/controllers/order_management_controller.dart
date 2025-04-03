@@ -743,12 +743,12 @@ final class OrderManagementController extends GetxController {
   );
 
   Future<void> delete() async {
-    if (order != null) {
-      await DatabaseHelper.delete(
-        model: order!,
-        tableName: Order.tableName,
-      );
-    }
+    await DatabaseHelper.delete(
+      model: order!,
+      tableName: Order.tableName,
+    );
+
+    await order!.items.delete(type);
 
     if (debt != null) {
       await DatabaseHelper.delete(
@@ -757,8 +757,6 @@ final class OrderManagementController extends GetxController {
       );
     }
 
-    Get.back(); // Close the management screen
-    order = null;
-    debt = null;
+    Get.back();
   }
 }
