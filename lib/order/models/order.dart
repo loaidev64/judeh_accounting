@@ -12,12 +12,18 @@ final class Order extends DatabaseModel {
 
   double? debtAmount;
 
+  String? companyName;
+
+  String? customerName;
+
   final List<OrderItem> items;
 
   Order({
     super.id = 0,
     this.customerId,
     this.companyId,
+    this.customerName,
+    this.companyName,
     required this.type,
     required this.total,
     required this.items,
@@ -31,6 +37,8 @@ final class Order extends DatabaseModel {
         id: map['id'] as int,
         customerId: map['customer_id'] as int?,
         companyId: map['company_id'] as int?,
+        customerName: map['customer_name'] as String?,
+        companyName: map['company_name'] as String?,
         type: OrderType.values[map['type'] as int],
         total: map['total'] as double,
         items: map['order_items'] != null
@@ -75,6 +83,8 @@ final class Order extends DatabaseModel {
     int? id,
     int? customerId,
     int? companyId,
+    String? customerName,
+    String? companyName,
     OrderType? type,
     double? total,
     double? debtAmount,
@@ -86,6 +96,8 @@ final class Order extends DatabaseModel {
         id: id ?? this.id,
         customerId: customerId ?? this.customerId,
         companyId: companyId ?? this.companyId,
+        customerName: customerName ?? this.customerName,
+        companyName: companyName ?? this.companyName,
         type: type ?? this.type,
         total: total ?? this.total,
         items: items ?? this.items,

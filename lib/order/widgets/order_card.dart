@@ -72,6 +72,13 @@ class _OrderCardState extends State<OrderCard> {
                   ],
                 ),
               SizedBox(height: 5.h),
+              if (!widget.order.type.canHaveCustomer &&
+                  widget.order.companyName != null)
+                Text('الشركة: ${widget.order.companyName!}'),
+              if (widget.order.type.canHaveCustomer &&
+                  widget.order.customerName != null)
+                Text('الزبون: ${widget.order.customerName!}'),
+              SizedBox(height: 5.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -115,8 +122,8 @@ class _OrderCardState extends State<OrderCard> {
 
   Widget _headerSection() => Row(
         children: [
-          GestureDetector(
-            onTap: () {
+          FloatingActionButton.small(
+            onPressed: () {
               setState(() {
                 expanded = !expanded;
               });

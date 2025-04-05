@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:judeh_accounting/order/screens/order_management_screen.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 
+import '../../company/models/company.dart';
+import '../../customer/models/customer.dart';
 import '../models/order.dart';
 
 final class OrderController extends GetxController {
@@ -52,6 +54,37 @@ final class OrderController extends GetxController {
       return;
     }
 
+    final data = <Map<String, Object?>>[];
+    if (currentType.value.canHaveCustomer) {
+      final customerIds = orderData
+          .where((element) => element['customer_id'] != null)
+          .map((e) => e['customer_id'])
+          .toList();
+      final customers = await database.query(
+        Customer.tableName,
+        distinct: true,
+        columns: ['id', 'name'],
+        where:
+            'id in (${List.generate(customerIds.length, (_) => '?').join(',')})',
+        whereArgs: customerIds,
+      );
+      data.addAll(customers);
+    } else {
+      final companyIds = orderData
+          .where((element) => element['company_id'] != null)
+          .map((e) => e['company_id'])
+          .toList();
+      final companies = await database.query(
+        Company.tableName,
+        distinct: true,
+        columns: ['id', 'name'],
+        where:
+            'id in (${List.generate(companyIds.length, (_) => '?').join(',')})',
+        whereArgs: companyIds,
+      );
+      data.addAll(companies);
+    }
+
     // Fetch order items for the retrieved orders
     final orderIds = orderData.map((e) => e['id'] as int).toList();
     final orderItemsData = await database.query(
@@ -75,6 +108,12 @@ final class OrderController extends GetxController {
     for (var i = 0; i < orderData.length; i++) {
       orderItemsMap.add({
         ...orderData[i],
+        if (!currentType.value.canHaveCustomer)
+          'company_name': data.firstWhere(
+              (element) => element['id'] == orderData[i]['company_id'])['name'],
+        if (currentType.value.canHaveCustomer)
+          'customer_name': data.firstWhere((element) =>
+              element['id'] == orderData[i]['customer_id'])['name'],
         'order_items': orderItemsData
             .where((element) => element['order_id'] == orderData[i]['id'])
             .toList(),
