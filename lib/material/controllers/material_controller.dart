@@ -18,7 +18,8 @@ enum Screen { material, category }
 final class MaterialController extends GetxController {
   final currentPage = Screen.material.obs;
   final materials = <m.Material>[].obs;
-  final categoryController = Get.put(CategoryController());
+  final categoryController =
+      Get.put(CategoryController(type: CategoryType.material));
   final loading = false.obs;
 
   int selectedMaterialIndex = -1; // Track selected material for editing

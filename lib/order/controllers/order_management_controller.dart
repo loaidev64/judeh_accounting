@@ -759,4 +759,8 @@ final class OrderManagementController extends GetxController {
 
     Get.back();
   }
+
+  void addQuickItem() async{
+    
+  }
 }

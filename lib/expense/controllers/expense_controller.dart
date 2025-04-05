@@ -16,8 +16,8 @@ enum Screen { expense, category }
 final class ExpenseController extends GetxController {
   final currentPage = Screen.expense.obs;
   final expenses = <Expense>[].obs;
-  final categoryController =
-      Get.put(CategoryController()); // Use CategoryController
+  final categoryController = Get.put(
+      CategoryController(type: CategoryType.expense)); // Use CategoryController
   final loading = false.obs;
 
   int selectedExpenseIndex = -1; // Track selected expense for editing

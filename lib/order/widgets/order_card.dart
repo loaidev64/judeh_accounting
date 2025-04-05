@@ -36,7 +36,7 @@ class OrderCard extends StatefulWidget {
 }
 
 class _OrderCardState extends State<OrderCard> {
-  bool expanded = true;
+  late bool expanded = widget.onSelectRow != null;
 
   @override
   Widget build(BuildContext context) {
@@ -113,35 +113,41 @@ class _OrderCardState extends State<OrderCard> {
         ),
       );
 
-  Widget _headerSection() => GestureDetector(
-        onTap: () => setState(() {
-          expanded = !expanded;
-        }),
-        child: Row(
-          children: [
-            Text(
-              '${widget.order.createdAt.dayName} \n ${widget.order.createdAt.toDateString}',
-              style: AppTextStyles.orderCardDateTime,
+  Widget _headerSection() => Row(
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                expanded = !expanded;
+              });
+            },
+            child: Icon(
+              expanded ? Icons.expand_more : Icons.expand_less,
+              color: AppColors.primary,
             ),
-            Spacer(flex: 3),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5.r),
-                color: AppColors.primary,
-              ),
-              child: Text(
-                widget.order.id.toString(),
-                style: AppTextStyles.orderCardId,
-              ),
+          ),
+          Text(
+            '${widget.order.createdAt.dayName} \n ${widget.order.createdAt.toDateString}',
+            style: AppTextStyles.orderCardDateTime,
+          ),
+          Spacer(flex: 3),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5.r),
+              color: AppColors.primary,
             ),
-            Spacer(flex: 4),
-            Text(
-              widget.order.createdAt.toTimeString,
-              style: AppTextStyles.orderCardDateTime,
+            child: Text(
+              widget.order.id.toString(),
+              style: AppTextStyles.orderCardId,
             ),
-          ],
-        ),
+          ),
+          Spacer(flex: 4),
+          Text(
+            widget.order.createdAt.toTimeString,
+            style: AppTextStyles.orderCardDateTime,
+          ),
+        ],
       );
 
   Widget _debtAmount() => Container(

@@ -45,6 +45,10 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
                               ? AppBarcodeQrcodeScanner(
                                   onScan: controller.onScanBarcode)
                               : MaterialSearch(
+                                prefix: GestureDetector(
+                                  onTap: controller.addQuickItem,
+                                  child: Icon(Icons.add,   color: AppColors.primary,),
+                                ),
                                   controller: controller.materialController,
                                   onSearch: controller.returnMaterials,
                                   onSelected: ([material]) {

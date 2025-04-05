@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../shared/helpers/database_helper.dart';
 import '../models/backup.dart';
 import '../../shared/helpers/crypto_helper.dart';
+import 'package:share_plus/share_plus.dart';
 
 class BackupController extends GetxController {
   static const _backupTask = "hourlyBackup";
@@ -42,6 +43,16 @@ class BackupController extends GetxController {
       await file.writeAsString(encryptedData);
 
       Get.snackbar('نجاح', 'تم بنجاح حفظ نسخة احتياطية جديدة',
+          mainButton: TextButton(
+            onPressed: () async {
+              final result = await Share.shareXFiles([XFile(filePath)]);
+
+              if (result.status == ShareResultStatus.success) {
+                Get.printInfo(info: 'Thank you for sharing the picture!');
+              }
+            },
+            child: Text('مشاركة'),
+          ),
           snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       Get.snackbar('خطأ', 'لم يتم حفظ نسخة احتياطية بنجاح',

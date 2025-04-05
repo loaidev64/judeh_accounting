@@ -77,6 +77,7 @@ CREATE TABLE order_items (
     price REAL NOT NULL,
     quantity REAL NOT NULL,
     order_id INTEGER NOT NULL,
+    description TEXT,
     createdAt TEXT NOT NULL,
     updatedAt TEXT,
     FOREIGN KEY (material_id) REFERENCES materials(id),
@@ -115,8 +116,14 @@ Future<void> _setupDatabase() async {
   final path = '$databasesPath/database.db';
   final database = await openDatabase(
     path,
-    version: 1,
+    version: 2,
     onCreate: _runMigrations,
+    onUpgrade: (db, oldVersion, newVersion) async {
+      for (final migration in _migrations) {
+        await db.execute('DROP TABLE IF EXISTS ${migration.tableName}');
+        await db.execute(migration.sql);
+      }
+    },
   );
   Get.put(database, permanent: true);
 }

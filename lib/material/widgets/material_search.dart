@@ -14,6 +14,7 @@ class MaterialSearch extends StatefulWidget {
     required this.onSearch,
     required this.onSelected,
     this.controller,
+    this.prefix,
   });
 
   final Future<List<Material>> Function(String? search) onSearch;
@@ -21,6 +22,8 @@ class MaterialSearch extends StatefulWidget {
   final void Function([Material? material]) onSelected;
 
   final TextEditingController? controller;
+
+  final Widget? prefix;
 
   @override
   State<MaterialSearch> createState() => _MaterialSearchState();
@@ -44,10 +47,11 @@ class _MaterialSearchState extends State<MaterialSearch> {
               'المنتج',
               style: AppTextStyles.appTextFormFieldLabel,
             ),
-            TextField(
+            TextFormField(
               controller: controller,
               focusNode: focusNode,
               decoration: InputDecoration(
+                prefix: widget.prefix,
                 suffix: GestureDetector(
                   onTap: () {
                     materialController.clear();

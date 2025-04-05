@@ -11,6 +11,7 @@ class OrderItem extends DatabaseModel {
   double price;
   double quantity;
   int orderId;
+  String? _description; // this field is if there is a quick material or service
 
   OrderItem({
     super.id = 0,
@@ -20,9 +21,10 @@ class OrderItem extends DatabaseModel {
     required this.price,
     required this.quantity,
     required this.orderId,
+    String? description,
     super.createdAt,
     super.updatedAt,
-  });
+  }) : _description = description;
 
   /// Factory constructor to create an [OrderItem] object from a database map.
   factory OrderItem.fromDatabase(Map<String, Object?> map) => OrderItem(
@@ -32,6 +34,7 @@ class OrderItem extends DatabaseModel {
         price: map['price'] as double,
         quantity: map['quantity'] as double,
         orderId: map['order_id'] as int,
+        description: map['description'] as String?,
         createdAt: DateTime.parse(map['createdAt'] as String),
         updatedAt: map['updatedAt'] != null
             ? DateTime.parse(map['updatedAt'] as String)
@@ -57,6 +60,7 @@ class OrderItem extends DatabaseModel {
         'price': price,
         'quantity': quantity,
         'order_id': orderId,
+        'description': description,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt?.toIso8601String(),
       };
@@ -66,6 +70,7 @@ class OrderItem extends DatabaseModel {
   double get subTotal => quantity * price;
 
   String get description =>
+      _description ??
       '$materialName\n${price.toPriceString} X ${quantity.asIntIfItIsAnInt}';
 
   OrderItem copyWith({
@@ -75,6 +80,7 @@ class OrderItem extends DatabaseModel {
     double? price,
     double? quantity,
     int? orderId,
+    String? description,
   }) {
     return OrderItem(
       materialId: materialId ?? this.materialId,
@@ -83,6 +89,7 @@ class OrderItem extends DatabaseModel {
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
       orderId: orderId ?? this.orderId,
+      description: description ?? _description,
     );
   }
 
