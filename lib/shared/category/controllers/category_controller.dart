@@ -6,7 +6,7 @@ import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 import '../models/category.dart';
 
-final class CategoryController extends GetxController {
+class CategoryController extends GetxController {
   final categories = <Category>[].obs;
   int selectedCategoryIndex = -1;
 

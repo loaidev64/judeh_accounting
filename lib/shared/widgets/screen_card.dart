@@ -12,7 +12,7 @@ import '../../other/screens/other_screen.dart';
 import '../../report/screens/report_screen.dart';
 import '../theme/app_colors.dart';
 
-final class ScreenCard extends StatelessWidget {
+class ScreenCard extends StatelessWidget {
   final String icon;
 
   final String label;

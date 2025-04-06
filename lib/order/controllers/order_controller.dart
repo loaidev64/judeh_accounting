@@ -6,7 +6,7 @@ import '../../company/models/company.dart';
 import '../../customer/models/customer.dart';
 import '../models/order.dart';
 
-final class OrderController extends GetxController {
+class OrderController extends GetxController {
   final currentType = OrderType.sell.obs;
   final orders = <Order>[].obs;
   final loading = false.obs;

@@ -49,9 +49,11 @@ class AppButton extends StatelessWidget {
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            text,
-                            style: AppTextStyles.appButton,
+                          Flexible(
+                            child: Text(
+                              text,
+                              style: AppTextStyles.appButton,
+                            ),
                           ),
                           if (icon != null) ...[
                             SizedBox(width: 10.w),

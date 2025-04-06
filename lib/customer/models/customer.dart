@@ -1,6 +1,6 @@
 import 'package:judeh_accounting/shared/models/database_model.dart';
 
-final class Customer extends DatabaseModel {
+class Customer extends DatabaseModel {
   String name;
   String? phoneNumber;
   String? description;

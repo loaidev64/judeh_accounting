@@ -7,7 +7,7 @@ import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import '../../shared/widgets/widgets.dart';
 import '../models/customer.dart';
 
-final class CustomerController extends GetxController {
+class CustomerController extends GetxController {
   final customers = <Customer>[].obs;
   int selectedIndex = -1;
 
@@ -158,7 +158,8 @@ final class CustomerController extends GetxController {
                   }
                 },
                 text: isEditing ? 'تعديل' : 'إضافة',
-                icon: isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
+                icon:
+                    isEditing ? 'assets/svgs/edit.svg' : 'assets/svgs/plus.svg',
               );
             },
           ),

@@ -1,6 +1,6 @@
 import 'package:judeh_accounting/shared/models/database_model.dart';
 
-final class Debt extends DatabaseModel {
+class Debt extends DatabaseModel {
   int? customerId;
   int? companyId;
   int? orderId;

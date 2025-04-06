@@ -13,7 +13,7 @@ import '../models/expense.dart';
 
 enum Screen { expense, category }
 
-final class ExpenseController extends GetxController {
+class ExpenseController extends GetxController {
   final currentPage = Screen.expense.obs;
   final expenses = <Expense>[].obs;
   final categoryController = Get.put(

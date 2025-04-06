@@ -15,7 +15,7 @@ import '../models/material.dart' as m;
 
 enum Screen { material, category }
 
-final class MaterialController extends GetxController {
+class MaterialController extends GetxController {
   final currentPage = Screen.material.obs;
   final materials = <m.Material>[].obs;
   final categoryController =

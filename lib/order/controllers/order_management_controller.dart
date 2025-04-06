@@ -19,7 +19,7 @@ import '../../material/models/material.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/widgets.dart';
 
-final class OrderManagementController extends GetxController {
+class OrderManagementController extends GetxController {
   final loading = false.obs;
 
   final addedNewItem = false.obs;
@@ -313,6 +313,7 @@ final class OrderManagementController extends GetxController {
   Future<void> save() async {
     final debt = this.debt ?? Debt.empty();
     bool successful = false;
+    if (this.debt == null) debtController.text = 0.toString();
     if (type.canHaveCustomer) {
       await Get.bottomSheet(
           Container(
@@ -350,6 +351,11 @@ final class OrderManagementController extends GetxController {
                                     onSaved: (value) => debt.amount =
                                         double.tryParse(value ?? '') ?? 0,
                                     isRequired: true,
+                                    suffix: Text(
+                                      'المجموع النهائي: ${items.total.toPriceString}',
+                                      style: AppTextStyles.appTextFormFieldText
+                                          .copyWith(color: AppColors.orange),
+                                    ),
                                   ),
                               ],
                             ),
@@ -760,7 +766,5 @@ final class OrderManagementController extends GetxController {
     Get.back();
   }
 
-  void addQuickItem() async{
-    
-  }
+  void addQuickItem() async {}
 }
