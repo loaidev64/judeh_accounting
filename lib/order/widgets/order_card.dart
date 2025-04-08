@@ -122,17 +122,18 @@ class _OrderCardState extends State<OrderCard> {
 
   Widget _headerSection() => Row(
         children: [
-          FloatingActionButton.small(
-            onPressed: () {
-              setState(() {
-                expanded = !expanded;
-              });
-            },
-            child: Icon(
-              expanded ? Icons.expand_more : Icons.expand_less,
-              color: AppColors.primary,
+          if (widget.onSelectRow == null)
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  expanded = !expanded;
+                });
+              },
+              child: Icon(
+                expanded ? Icons.expand_more : Icons.expand_less,
+                color: AppColors.primary,
+              ),
             ),
-          ),
           Text(
             '${widget.order.createdAt.dayName} \n ${widget.order.createdAt.toDateString}',
             style: AppTextStyles.orderCardDateTime,

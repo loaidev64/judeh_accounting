@@ -26,7 +26,7 @@ void main() {
         designSize: const Size(360, 690),
         minTextAdapt: true,
         splitScreenMode: true,
-        builder: (_, child) => GetMaterialApp(
+        builder: (_, __) => GetMaterialApp(
           home: CompanyScreen(),
         ),
       ),

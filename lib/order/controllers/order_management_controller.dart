@@ -112,12 +112,18 @@ class OrderManagementController extends GetxController {
       whereArgs: order.items.map((e) => e.materialId).toList(),
     );
 
-    items.addAll(order.items.map((item) => item.copyWith(
+    items.addAll(order.items.map((item) {
+      try {
+        return item.copyWith(
           materialName: materialsData.firstWhere(
               (element) => element['id'] == item.materialId)['name'] as String,
           materialUnit: Unit.values[materialsData.firstWhere(
               (element) => element['id'] == item.materialId)['unit'] as int],
-        )));
+        );
+      } catch (e) {
+        return item;
+      }
+    }));
   }
 
   void _loadCompany(Order order) async {
@@ -183,9 +189,14 @@ class OrderManagementController extends GetxController {
     return data.map(Company.fromDatabase).toList();
   }
 
-  void editItem(int index) async {
+  void editItem(int index, {bool withoutQuantity = false}) async {
     final item = items[index];
-    quantityController.text = item.quantity.asIntIfItIsAnInt;
+    if (item.materialId == 0) {
+      withoutQuantity = true;
+      quantityController.text = item.description;
+    } else {
+      quantityController.text = item.quantity.asIntIfItIsAnInt;
+    }
     priceController.text = item.price.toInt().toString();
     await Get.bottomSheet(
         Container(
@@ -205,27 +216,32 @@ class OrderManagementController extends GetxController {
                     children: [
                       Expanded(
                         child: AppTextFormField(
-                          label: 'الكمية',
+                          label: !withoutQuantity ? 'الكمية' : 'الوصف',
                           isRequired: true,
                           autofocus: true,
                           controller: quantityController,
-                          keyboardType: TextInputType.number,
+                          keyboardType:
+                              !withoutQuantity ? TextInputType.number : null,
                           validator: (value) {
-                            if (value != null &&
-                                !value.isNumericOnly &&
-                                item.materialUnit! == Unit.amount) {
-                              return 'يجب ان يكون بلا فاصلة';
+                            if (!withoutQuantity) {
+                              if (value != null &&
+                                  !value.isNumericOnly &&
+                                  item.materialUnit! == Unit.amount) {
+                                return 'يجب ان يكون بلا فاصلة';
+                              }
                             }
 
                             return null;
                           },
-                          suffix: item.materialUnit != null
-                              ? Text(
-                                  item.materialUnit!.name,
-                                  style: AppTextStyles.appTextFormFieldText
-                                      .copyWith(color: AppColors.orange),
-                                )
-                              : null,
+                          suffix: withoutQuantity
+                              ? null
+                              : item.materialUnit != null
+                                  ? Text(
+                                      item.materialUnit!.name,
+                                      style: AppTextStyles.appTextFormFieldText
+                                          .copyWith(color: AppColors.orange),
+                                    )
+                                  : null,
                           // counter: Text(
                           //   'العدد المتبقي ${material.value.quantity.toInt()}',
                           //   style: AppTextStyles.appTextFormFieldText
@@ -258,8 +274,12 @@ class OrderManagementController extends GetxController {
                           items.insert(
                               index,
                               item.copyWith(
-                                quantity:
-                                    double.tryParse(quantityController.text),
+                                quantity: !withoutQuantity
+                                    ? double.tryParse(quantityController.text)
+                                    : 1,
+                                description: !withoutQuantity
+                                    ? null
+                                    : quantityController.text,
                                 price: double.tryParse(priceController.text),
                               ));
                           Get.back();
@@ -698,6 +718,7 @@ class OrderManagementController extends GetxController {
       );
     }
 
+    beepSound();
     final item =
         items.where((element) => element.materialId == material.id).firstOrNull;
     if (item == null) {
@@ -715,7 +736,6 @@ class OrderManagementController extends GetxController {
       items.insert(index, item.increaseQuantity());
     }
     toggleAddedNewItem();
-    beepSound();
   }
 
   void removeItem(int index) => items.removeAt(index);
@@ -766,5 +786,28 @@ class OrderManagementController extends GetxController {
     Get.back();
   }
 
-  void addQuickItem() async {}
+  void addQuickItem() async {
+    if (materialController.text.isNotEmpty) {
+      if (items
+          .where((item) => item.description == materialController.text)
+          .isEmpty) {
+        items.add(OrderItem(
+          description: materialController.text,
+          materialId: 0,
+          orderId: 0,
+          quantity: 1,
+          price: 0,
+        ));
+      } else {
+        final index = items
+            .indexWhere((item) => item.description == materialController.text);
+        items.insert(index, items[index].increaseQuantity());
+        items.removeAt(index);
+      }
+
+      materialController.clear();
+
+      editItem(items.length - 1);
+    }
+  }
 }

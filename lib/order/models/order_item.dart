@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:get/get.dart';
 import 'package:judeh_accounting/material/models/material.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 
@@ -27,19 +28,22 @@ class OrderItem extends DatabaseModel {
   }) : _description = description;
 
   /// Factory constructor to create an [OrderItem] object from a database map.
-  factory OrderItem.fromDatabase(Map<String, Object?> map) => OrderItem(
-        id: map['id'] as int,
-        materialId: map['material_id'] as int,
-        materialName: map['material_name'] as String?,
-        price: map['price'] as double,
-        quantity: map['quantity'] as double,
-        orderId: map['order_id'] as int,
-        description: map['description'] as String?,
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
-            : null,
-      );
+  factory OrderItem.fromDatabase(Map<String, Object?> map) {
+    Get.printInfo(info: map.toString());
+    return OrderItem(
+      id: map['id'] as int,
+      materialId: map['material_id'] as int,
+      materialName: map['material_name'] as String?,
+      price: map['price'] as double,
+      quantity: map['quantity'] as double,
+      orderId: map['order_id'] as int,
+      description: map['description'] as String?,
+      createdAt: DateTime.parse(map['createdAt'] as String),
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'] as String)
+          : null,
+    );
+  }
 
   /// Factory constructor to create an empty [OrderItem] object.
   factory OrderItem.empty() => OrderItem(

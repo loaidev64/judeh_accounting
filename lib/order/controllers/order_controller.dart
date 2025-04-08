@@ -29,8 +29,6 @@ class OrderController extends GetxController {
 
     final database = DatabaseHelper.getDatabase();
 
-    Get.printInfo(info: (await database.query('customers')).toString());
-
     // Fetch orders based on the current type
     final orderData = await database.query(
       'orders LEFT JOIN debts ON orders.id = debts.order_id',
@@ -88,12 +86,13 @@ class OrderController extends GetxController {
     // Fetch order items for the retrieved orders
     final orderIds = orderData.map((e) => e['id'] as int).toList();
     final orderItemsData = await database.query(
-      'order_items JOIN materials ON order_items.material_id = materials.id',
+      'order_items LEFT JOIN materials ON order_items.material_id = materials.id',
       columns: [
         'order_items.id',
         'material_id',
         'order_items.price',
         'order_items.quantity',
+        'order_items.description',
         'order_id',
         'order_items.createdAt',
         'order_items.updatedAt',
@@ -108,10 +107,12 @@ class OrderController extends GetxController {
     for (var i = 0; i < orderData.length; i++) {
       orderItemsMap.add({
         ...orderData[i],
-        if (!currentType.value.canHaveCustomer)
+        if (!currentType.value.canHaveCustomer &&
+            orderData[i]['company_id'] != null)
           'company_name': data.firstWhere(
               (element) => element['id'] == orderData[i]['company_id'])['name'],
-        if (currentType.value.canHaveCustomer)
+        if (currentType.value.canHaveCustomer &&
+            orderData[i]['customer_id'] != null)
           'customer_name': data.firstWhere((element) =>
               element['id'] == orderData[i]['customer_id'])['name'],
         'order_items': orderItemsData
