@@ -143,7 +143,7 @@ extension NewListOfString on List<String> {
   }
 }
 
-final class Header {
+class Header {
   final String label;
 
   final double width;

@@ -31,6 +31,8 @@ class _CompanySearchState extends State<CompanySearch> {
     return TypeAheadField<Company>(
       suggestionsCallback: widget.onSearch,
       controller: companyController,
+      hideKeyboardOnDrag: true,
+      hideOnSelect: true,
       builder: (context, controller, focusNode) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

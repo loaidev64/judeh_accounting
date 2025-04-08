@@ -5,7 +5,6 @@ import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../../shared/category/controllers/category_controller.dart';
 import '../../shared/theme/app_colors.dart';
@@ -16,10 +15,11 @@ import '../models/material.dart' as m;
 
 enum Screen { material, category }
 
-final class MaterialController extends GetxController {
+class MaterialController extends GetxController {
   final currentPage = Screen.material.obs;
   final materials = <m.Material>[].obs;
-  final categoryController = Get.put(CategoryController());
+  final categoryController =
+      Get.put(CategoryController(type: CategoryType.material));
   final loading = false.obs;
 
   int selectedMaterialIndex = -1; // Track selected material for editing

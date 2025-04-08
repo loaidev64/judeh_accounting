@@ -1,6 +1,6 @@
 import 'package:judeh_accounting/shared/models/database_model.dart';
 
-final class Expense extends DatabaseModel {
+class Expense extends DatabaseModel {
   double cost;
 
   String? description;

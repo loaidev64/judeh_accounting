@@ -7,7 +7,7 @@ import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import '../../shared/widgets/widgets.dart';
 import '../models/company.dart';
 
-final class CompanyController extends GetxController {
+class CompanyController extends GetxController {
   final companies = <Company>[].obs;
   int selectedIndex = -1;
 

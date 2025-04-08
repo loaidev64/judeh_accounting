@@ -1,4 +1,4 @@
-final class Migration {
+class Migration {
   final String tableName;
 
   final String sql;

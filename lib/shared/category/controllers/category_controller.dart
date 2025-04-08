@@ -6,9 +6,12 @@ import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
 import '../models/category.dart';
 
-final class CategoryController extends GetxController {
+class CategoryController extends GetxController {
   final categories = <Category>[].obs;
   int selectedCategoryIndex = -1;
+
+  final CategoryType type;
+  CategoryController({required this.type});
 
   final _idTextController = TextEditingController();
   final _nameTextController = TextEditingController();
@@ -35,13 +38,11 @@ final class CategoryController extends GetxController {
     final List<Map<String, Object?>> categories;
     if (search == null) {
       categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: 'type = ?',
-          whereArgs: [CategoryType.material.index],
-          limit: 25);
+          where: 'type = ?', whereArgs: [type.index], limit: 25);
     } else {
       categories = await DatabaseHelper.getDatabase().query(Category.tableName,
           where: "name LIKE ? AND type = ?",
-          whereArgs: ['%$search%', CategoryType.material.index],
+          whereArgs: ['%$search%', type.index],
           limit: 25);
     }
     return categories.map(Category.fromDatabase).toList();

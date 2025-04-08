@@ -36,7 +36,7 @@ class OrderCard extends StatefulWidget {
 }
 
 class _OrderCardState extends State<OrderCard> {
-  bool expanded = true;
+  late bool expanded = widget.onSelectRow != null;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class _OrderCardState extends State<OrderCard> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _headerSection(context),
+              _headerSection(),
               SizedBox(height: 5.h),
               if (expanded)
                 AppTable(
@@ -72,7 +72,23 @@ class _OrderCardState extends State<OrderCard> {
                   ],
                 ),
               SizedBox(height: 5.h),
-              _total(context),
+              if (!widget.order.type.canHaveCustomer &&
+                  widget.order.companyName != null)
+                Text('الشركة: ${widget.order.companyName!}'),
+              if (widget.order.type.canHaveCustomer &&
+                  widget.order.customerName != null)
+                Text('الزبون: ${widget.order.customerName!}'),
+              SizedBox(height: 5.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.order.debtAmount != null) ...[
+                    _debtAmount(),
+                    _debtRemaining(),
+                  ],
+                  _total(),
+                ],
+              ),
               SizedBox(height: 5.h),
             ],
           ),
@@ -81,38 +97,43 @@ class _OrderCardState extends State<OrderCard> {
     );
   }
 
-  Widget _total(BuildContext context) {
-    return Container(
-      width: 96.w,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(15.r),
-      ),
-      padding: EdgeInsets.all(10.h),
-      child: Center(
-        child: Column(
-          children: [
-            Text(
-              'المجموع النهائي',
-              style: AppTextStyles.orderCardTotal,
-            ),
-            Text(
-              widget.order.total.toPriceString,
-              style: AppTextStyles.orderCardTotal,
-            ),
-          ],
+  Widget _total() => Container(
+        width: 96.w,
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(15.r),
         ),
-      ),
-    );
-  }
+        padding: EdgeInsets.all(10.h),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                'المجموع النهائي',
+                style: AppTextStyles.orderCardTotal,
+              ),
+              Text(
+                widget.order.total.toPriceString,
+                style: AppTextStyles.orderCardTotal,
+              ),
+            ],
+          ),
+        ),
+      );
 
-  Widget _headerSection(BuildContext context) {
-    return GestureDetector(
-      onTap: () => setState(() {
-        expanded = !expanded;
-      }),
-      child: Row(
+  Widget _headerSection() => Row(
         children: [
+          if (widget.onSelectRow == null)
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  expanded = !expanded;
+                });
+              },
+              child: Icon(
+                expanded ? Icons.expand_more : Icons.expand_less,
+                color: AppColors.primary,
+              ),
+            ),
           Text(
             '${widget.order.createdAt.dayName} \n ${widget.order.createdAt.toDateString}',
             style: AppTextStyles.orderCardDateTime,
@@ -135,7 +156,52 @@ class _OrderCardState extends State<OrderCard> {
             style: AppTextStyles.orderCardDateTime,
           ),
         ],
-      ),
-    );
-  }
+      );
+
+  Widget _debtAmount() => Container(
+        width: 96.w,
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(15.r),
+        ),
+        padding: EdgeInsets.all(10.h),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                'مقبوض',
+                style: AppTextStyles.orderCardTotal,
+              ),
+              Text(
+                widget.order.debtAmount!.toPriceString,
+                style: AppTextStyles.orderCardTotal,
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _debtRemaining() => Container(
+        width: 96.w,
+        margin: EdgeInsets.symmetric(horizontal: 10.w),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(15.r),
+        ),
+        padding: EdgeInsets.all(10.h),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                'آجل',
+                style: AppTextStyles.orderCardTotal,
+              ),
+              Text(
+                (widget.order.total - widget.order.debtAmount!).toPriceString,
+                style: AppTextStyles.orderCardTotal,
+              ),
+            ],
+          ),
+        ),
+      );
 }

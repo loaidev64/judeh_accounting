@@ -13,24 +13,32 @@ class MaterialSearch extends StatefulWidget {
     super.key,
     required this.onSearch,
     required this.onSelected,
+    this.controller,
+    this.prefix,
   });
 
   final Future<List<Material>> Function(String? search) onSearch;
 
   final void Function([Material? material]) onSelected;
 
+  final TextEditingController? controller;
+
+  final Widget? prefix;
+
   @override
   State<MaterialSearch> createState() => _MaterialSearchState();
 }
 
 class _MaterialSearchState extends State<MaterialSearch> {
-  final materialController = TextEditingController();
+  late final materialController = widget.controller ?? TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return TypeAheadField<Material>(
       suggestionsCallback: widget.onSearch,
       controller: materialController,
+      hideKeyboardOnDrag: true,
+      hideOnSelect: true,
       builder: (context, controller, focusNode) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,10 +47,11 @@ class _MaterialSearchState extends State<MaterialSearch> {
               'المنتج',
               style: AppTextStyles.appTextFormFieldLabel,
             ),
-            TextField(
+            TextFormField(
               controller: controller,
               focusNode: focusNode,
               decoration: InputDecoration(
+                prefix: widget.prefix,
                 suffix: GestureDetector(
                   onTap: () {
                     materialController.clear();

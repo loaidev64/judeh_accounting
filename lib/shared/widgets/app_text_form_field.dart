@@ -53,12 +53,16 @@ class AppTextFormField extends StatelessWidget {
           keyboardType: keyboardType,
           autocorrect: autofocus,
           validator: (value) {
-            if (!isRequired) {
-              return validator?.call(value);
+            if (validator != null) {
+              return validator!.call(value);
             }
-            return value == null || value.removeAllWhitespace.isEmpty
+            if(isRequired)
+            {
+              return value == null || value.removeAllWhitespace.isEmpty
                 ? 'هذا الحقل إجباري'
                 : null;
+                }
+            return null;
           },
           onSaved: onSaved,
           readOnly: readonly,

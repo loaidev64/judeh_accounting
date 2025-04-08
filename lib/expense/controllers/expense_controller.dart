@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -14,11 +13,11 @@ import '../models/expense.dart';
 
 enum Screen { expense, category }
 
-final class ExpenseController extends GetxController {
+class ExpenseController extends GetxController {
   final currentPage = Screen.expense.obs;
   final expenses = <Expense>[].obs;
-  final categoryController =
-      Get.put(CategoryController()); // Use CategoryController
+  final categoryController = Get.put(
+      CategoryController(type: CategoryType.expense)); // Use CategoryController
   final loading = false.obs;
 
   int selectedExpenseIndex = -1; // Track selected expense for editing
