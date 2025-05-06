@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/pocketbase/constants/pocketbase_collections.dart';
+import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
+import 'package:judeh_accounting/shared/logger/app_logger.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import 'package:judeh_accounting/shared/widgets/widgets.dart';
+import 'package:pocketbase/pocketbase.dart';
 import '../models/category.dart';
 
 class CategoryController extends GetxController {
   final categories = <Category>[].obs;
   int selectedCategoryIndex = -1;
+
+  final _pocketbase = pocketbase().collection(PocketbaseCollections.categories);
 
   final CategoryType type;
   CategoryController({required this.type});
@@ -35,16 +41,11 @@ class CategoryController extends GetxController {
   }
 
   Future<List<Category>> returnCategories([String? search]) async {
-    final List<Map<String, Object?>> categories;
-    if (search == null) {
-      categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: 'type = ?', whereArgs: [type.index], limit: 25);
-    } else {
-      categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: "name LIKE ? AND type = ?",
-          whereArgs: ['%$search%', type.index],
-          limit: 25);
-    }
+      final response = await _pocketbase.getList(
+        perPage: 25,
+        filter: search == null ? 'type=${type.index}' : '(type=${type.index} && name~$search)',
+      );
+    final categories = response.items.map((e) => e.data);
     return categories.map(Category.fromDatabase).toList();
   }
 
@@ -146,10 +147,7 @@ class CategoryController extends GetxController {
           Expanded(
             child: AppButton(
               onTap: () async {
-                await DatabaseHelper.delete(
-                  model: category,
-                  tableName: Category.tableName,
-                );
+                await _pocketbase.delete(category.id);
                 Get.back();
               },
               text: 'حذف',
@@ -165,20 +163,14 @@ class CategoryController extends GetxController {
               Form.of(context).save();
               try {
                 if (isEditing) {
-                  await DatabaseHelper.update(
-                    model: category,
-                    tableName: Category.tableName,
-                  );
+                  await _pocketbase.update(category.id, body: category.toDatabase);
                 } else {
-                  Get.printInfo(info: category.toDatabase.toString());
-                  await DatabaseHelper.create(
-                    model: category,
-                    tableName: Category.tableName,
-                  );
+                  await _pocketbase.create(body: category.toDatabase);
                 }
                 Get.back();
-              } catch (e) {
-                if (e.toString().contains('UNIQUE constraint failed')) {
+              }on ClientException catch (e, trace) {
+                AppLogger.exception(e, trace);
+                if(e.response['data']['name']['message'].toString().contains('Value must be unique')){
                   Get.snackbar(
                     'خطأ',
                     'هذا التصنيف موجود مسبقاً، يرجى اختيار اسم آخر',
