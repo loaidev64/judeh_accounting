@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/pocketbase/constants/pocketbase_collections.dart';
+import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 
@@ -47,9 +49,15 @@ class CompanyController extends GetxController {
 
   /// Fetches company data from the database.
   Future<void> getData() async {
-    final database = DatabaseHelper.getDatabase();
-    final data = await database.query(Company.tableName, limit: 25);
-    companies.assignAll(data.map((e) => Company.fromDatabase(e)));
+    // final database = DatabaseHelper.getDatabase();
+    // final data = await database.query(Company.tableName, limit: 25);
+    // companies.assignAll(data.map((e) => Company.fromDatabase(e)));
+
+    final response = await pocketbase().collection(PocketbaseCollections.companies).getList(
+      perPage: 25,
+    );
+
+    companies.assignAll(response.items.map((item) => Company.fromDatabase(item.data)));
   }
 
   /// Opens a bottom sheet to create or edit a company.

@@ -1,13 +1,13 @@
 import 'package:judeh_accounting/shared/models/database_model.dart';
 
 class Debt extends DatabaseModel {
-  int? customerId;
-  int? companyId;
-  int? orderId;
+  String? customerId;
+  String? companyId;
+  String? orderId;
   double amount;
 
   Debt({
-    super.id = 0,
+    super.id = '',
     this.customerId,
     this.companyId,
     this.orderId,
@@ -18,20 +18,19 @@ class Debt extends DatabaseModel {
 
   /// Factory constructor to create a [Debt] object from a database map.
   factory Debt.fromDatabase(Map<String, Object?> map) => Debt(
-        id: map['id'] as int,
-        customerId: map['customer_id'] as int?,
-        companyId: map['company_id'] as int?,
-        orderId: map['order_id'] as int?,
+        id: map['id'] as String,
+        customerId: map['customer_id'] as String?,
+        companyId: map['company_id'] as String?,
+        orderId: map['order_id'] as String?,
         amount: map['amount'] as double,
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
+        createdAt: DateTime.parse(map['created'] as String),
+        updatedAt: map['updated'] != null
+            ? DateTime.parse(map['updated'] as String)
             : null,
       );
 
   /// Factory constructor to create an empty [Debt] object.
   factory Debt.empty() => Debt(
-        id: 0,
         customerId: null,
         companyId: null,
         orderId: null,

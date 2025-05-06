@@ -6,16 +6,16 @@ import 'package:judeh_accounting/shared/extensions/double.dart';
 import '../../shared/models/database_model.dart';
 
 class OrderItem extends DatabaseModel {
-  int materialId;
+  String materialId;
   String? materialName;
   Unit? materialUnit;
   double price;
   double quantity;
-  int orderId;
+  String orderId;
   String? _description; // this field is if there is a quick material or service
 
   OrderItem({
-    super.id = 0,
+    super.id,
     required this.materialId,
     this.materialName,
     this.materialUnit,
@@ -31,14 +31,14 @@ class OrderItem extends DatabaseModel {
   factory OrderItem.fromDatabase(Map<String, Object?> map) {
     Get.printInfo(info: map.toString());
     return OrderItem(
-      id: map['id'] as int,
-      materialId: map['material_id'] as int,
+      id: map['id'] as String,
+      materialId: map['material_id'] as String,
       materialName: map['material_name'] as String?,
       price: map['price'] as double,
       quantity: map['quantity'] as double,
-      orderId: map['order_id'] as int,
+      orderId: map['order_id'] as String,
       description: map['description'] as String?,
-      createdAt: DateTime.parse(map['createdAt'] as String),
+      createdAt: DateTime.parse(map['created'] as String),
       updatedAt: map['updatedAt'] != null
           ? DateTime.parse(map['updatedAt'] as String)
           : null,
@@ -47,11 +47,10 @@ class OrderItem extends DatabaseModel {
 
   /// Factory constructor to create an empty [OrderItem] object.
   factory OrderItem.empty() => OrderItem(
-        id: 0,
-        materialId: 0,
+        materialId: '',
         price: 0.0,
         quantity: 0,
-        orderId: 0,
+        orderId: '',
         createdAt: DateTime.now(),
         updatedAt: null,
       );
@@ -78,12 +77,12 @@ class OrderItem extends DatabaseModel {
       '$materialName\n${price.toPriceString} X ${quantity.asIntIfItIsAnInt}';
 
   OrderItem copyWith({
-    int? materialId,
+    String? materialId,
     String? materialName,
     Unit? materialUnit,
     double? price,
     double? quantity,
-    int? orderId,
+    String? orderId,
     String? description,
   }) {
     return OrderItem(

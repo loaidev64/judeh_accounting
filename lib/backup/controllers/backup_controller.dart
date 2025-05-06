@@ -16,7 +16,7 @@ class BackupController extends GetxController {
 
   @override
   void onInit() {
-    _callbackDispatcher();
+    // _callbackDispatcher();
     super.onInit();
   }
 

@@ -316,7 +316,7 @@ class OrderManagementController extends GetxController {
           materialUnit: material.unit,
           price: material.price,
           quantity: 1,
-          orderId: 0));
+          orderId: ''));
     } else {
       final index =
           items.indexWhere((element) => element.materialId == material.id);
@@ -728,7 +728,7 @@ class OrderManagementController extends GetxController {
           materialUnit: material.unit,
           price: material.price,
           quantity: 1,
-          orderId: 0));
+          orderId: ''));
     } else {
       final index =
           items.indexWhere((element) => element.materialId == material.id);
@@ -793,8 +793,8 @@ class OrderManagementController extends GetxController {
           .isEmpty) {
         items.add(OrderItem(
           description: materialController.text,
-          materialId: 0,
-          orderId: 0,
+          materialId: '',
+          orderId: '',
           quantity: 1,
           price: 0,
         ));

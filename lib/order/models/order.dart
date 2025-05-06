@@ -2,9 +2,9 @@ import 'package:judeh_accounting/order/models/order_item.dart';
 import 'package:judeh_accounting/shared/models/database_model.dart';
 
 class Order extends DatabaseModel {
-  int? customerId;
+  String? customerId;
 
-  int? companyId;
+  String? companyId;
 
   OrderType type;
 
@@ -19,7 +19,7 @@ class Order extends DatabaseModel {
   final List<OrderItem> items;
 
   Order({
-    super.id = 0,
+    super.id = '',
     this.customerId,
     this.companyId,
     this.customerName,
@@ -34,9 +34,9 @@ class Order extends DatabaseModel {
 
   /// Factory constructor to create a [Order] object from a database map.
   factory Order.fromDatabase(Map<String, Object?> map) => Order(
-        id: map['id'] as int,
-        customerId: map['customer_id'] as int?,
-        companyId: map['company_id'] as int?,
+        id: map['id'] as String,
+        customerId: map['customer_id'] as String?,
+        companyId: map['company_id'] as String?,
         customerName: map['customer_name'] as String?,
         companyName: map['company_name'] as String?,
         type: OrderType.values[map['type'] as int],
@@ -47,17 +47,17 @@ class Order extends DatabaseModel {
                 .toList()
             : [],
         debtAmount: map['debt_amount'] as double?,
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
+        createdAt: DateTime.parse(map['created'] as String),
+        updatedAt: map['updated'] != null
+            ? DateTime.parse(map['updated'] as String)
             : null,
       );
 
   /// Factory constructor to create an empty [Order] object.
   factory Order.empty(OrderType type) => Order(
-        id: 0,
-        customerId: 0,
-        companyId: 0,
+        id: '',
+        customerId: '',
+        companyId: '',
         type: type,
         total: 0,
         items: [],
@@ -80,9 +80,9 @@ class Order extends DatabaseModel {
   static const tableName = 'orders';
 
   Order copyWith({
-    int? id,
-    int? customerId,
-    int? companyId,
+    String? id,
+    String? customerId,
+    String? companyId,
     String? customerName,
     String? companyName,
     OrderType? type,

@@ -6,7 +6,7 @@ class Customer extends DatabaseModel {
   String? description;
 
   Customer({
-    super.id = 0,
+    super.id = '',
     required this.name,
     this.phoneNumber,
     this.description,
@@ -16,19 +16,19 @@ class Customer extends DatabaseModel {
 
   /// Factory constructor to create a [Customer] object from a database map.
   factory Customer.fromDatabase(Map<String, Object?> map) => Customer(
-        id: map['id'] as int,
+        id: map['id'] as String,
         name: map['name'] as String,
         phoneNumber: map['phoneNumber'] as String?,
         description: map['description'] as String?,
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
+        createdAt: DateTime.parse(map['created'] as String),
+        updatedAt: map['updated'] != null
+            ? DateTime.parse(map['updated'] as String)
             : null,
       );
 
   /// Factory constructor to create an empty [Customer] object.
   factory Customer.empty() => Customer(
-        id: 0,
+        id: '',
         name: '',
         phoneNumber: null,
         description: null,

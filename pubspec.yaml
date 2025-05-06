@@ -46,6 +46,9 @@ dependencies:
   path_provider: ^2.1.5
   once: ^1.7.0
   share_plus: ^10.1.4
+  pocketbase_server_flutter: ^1.1.0
+  pocketbase: ^0.22.0
+  logger: ^2.5.0
 
 dev_dependencies:
   flutter_test:

@@ -5,12 +5,12 @@ class Material extends DatabaseModel {
   double quantity;
   double cost;
   double price;
-  int categoryId; // New field: categoryId (cannot be null)
+  String categoryId; // New field: categoryId (cannot be null)
   Unit unit;
   String? barcode; // New nullable field
 
   Material({
-    super.id = 0,
+    super.id = '',
     required this.name,
     required this.quantity,
     required this.cost,
@@ -24,28 +24,28 @@ class Material extends DatabaseModel {
 
   /// Factory constructor to create a [Material] object from a database map.
   factory Material.fromDatabase(Map<String, Object?> map) => Material(
-        id: map['id'] as int,
+        id: map['id'] as String,
         name: map['name'] as String,
         quantity: map['quantity'] as double,
         cost: map['cost'] as double,
         price: map['price'] as double,
-        categoryId: map['category_id'] as int, // New field
+        categoryId: map['category_id'] as String, // New field
         unit: Unit.values[map['unit'] as int],
         barcode: map['barcode'] as String?, // New nullable field
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
+        createdAt: DateTime.parse(map['created'] as String),
+        updatedAt: map['updated'] != null
+            ? DateTime.parse(map['updated'] as String)
             : null,
       );
 
   /// Factory constructor to create an empty [Material] object.
   factory Material.empty() => Material(
-        id: 0,
+        id: '',
         name: '',
         quantity: 0,
         cost: 0.0,
         price: 0.0,
-        categoryId: -1, // Default value for categoryId
+        categoryId: '', // Default value for categoryId
         unit: Unit.amount,
         barcode: null, // Default value for barcode
         createdAt: DateTime.now(),

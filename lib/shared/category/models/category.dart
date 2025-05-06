@@ -6,7 +6,7 @@ class Category extends DatabaseModel {
   CategoryType type;
 
   Category({
-    super.id = 0,
+    super.id = '',
     required this.name,
     this.description,
     required this.type,
@@ -16,19 +16,19 @@ class Category extends DatabaseModel {
 
   /// Factory constructor to create a [Category] object from a database map.
   factory Category.fromDatabase(Map<String, Object?> map) => Category(
-        id: map['id'] as int,
+        id: map['id'] as String,
         name: map['name'] as String,
         description: map['description'] as String?,
         type: CategoryType.values[map['type'] as int],
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
+        createdAt: DateTime.parse(map['created'] as String),
+        updatedAt: map['updated'] != null
+            ? DateTime.parse(map['updated'] as String)
             : null,
       );
 
   /// Factory constructor to create an empty [Category] object.
   factory Category.empty(CategoryType type) => Category(
-        id: 0,
+        id: '',
         name: '',
         type: type,
         description: null,

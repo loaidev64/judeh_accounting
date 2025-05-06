@@ -1,12 +1,12 @@
 abstract class DatabaseModel {
-  int id;
+  String id;
 
   DateTime createdAt;
 
   DateTime? updatedAt;
 
   DatabaseModel({
-    this.id = 0,
+    this.id = '',
     DateTime? createdAt,
     this.updatedAt,
   }) : createdAt = createdAt ?? DateTime.now();

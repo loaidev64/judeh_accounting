@@ -29,7 +29,7 @@ abstract class DatabaseHelper {
     }
 
     // Update model with generated ID
-    model.id = createdId;
+    // model.id = createdId;
 
     // Create backup entry unless creating a Backup record itself
     if (T != Backup) {

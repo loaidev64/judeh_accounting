@@ -3,12 +3,12 @@ import 'dart:convert';
 
 class Backup extends DatabaseModel {
   Map<String, dynamic> data;
-  int modelId;
+  String modelId;
   BackupAction action; // Changed to enum
   String table;
 
   Backup({
-    super.id = 0,
+    super.id = '',
     required this.data,
     required this.modelId,
     required this.action,
@@ -18,15 +18,15 @@ class Backup extends DatabaseModel {
   });
 
   factory Backup.fromDatabase(Map<String, Object?> map) => Backup(
-        id: map['id'] as int,
+        id: map['id'] as String,
         data: jsonDecode(map['data'] as String),
-        modelId: map['model_id'] as int,
+        modelId: map['model_id'] as String,
         action:
             BackupAction.values[map['action'] as int], // Convert index to enum
         table: map['_table'] as String,
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
+        createdAt: DateTime.parse(map['created'] as String),
+        updatedAt: map['updated'] != null
+            ? DateTime.parse(map['updated'] as String)
             : null,
       );
 

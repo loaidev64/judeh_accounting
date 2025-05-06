@@ -5,10 +5,10 @@ class Expense extends DatabaseModel {
 
   String? description;
 
-  int categoryId;
+  String categoryId;
 
   Expense({
-    super.id = 0,
+    super.id = '',
     required this.cost,
     this.description,
     required this.categoryId,
@@ -18,22 +18,22 @@ class Expense extends DatabaseModel {
 
   /// Factory constructor to create a [Expense] object from a database map.
   factory Expense.fromDatabase(Map<String, Object?> map) => Expense(
-        id: map['id'] as int,
+        id: map['id'] as String,
         description: map['description'] as String?,
         cost: map['cost'] as double,
-        categoryId: map['category_id'] as int, // New field
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: map['updatedAt'] != null
-            ? DateTime.parse(map['updatedAt'] as String)
+        categoryId: map['category_id'] as String, // New field
+        createdAt: DateTime.parse(map['created'] as String),
+        updatedAt: map['updated'] != null
+            ? DateTime.parse(map['updated'] as String)
             : null,
       );
 
   /// Factory constructor to create an empty [Expense] object.
   factory Expense.empty() => Expense(
-        id: 0,
+        id: '',
         description: null,
         cost: 0.0,
-        categoryId: -1, // Default value for categoryId
+        categoryId: '', // Default value for categoryId
         createdAt: DateTime.now(),
         updatedAt: null,
       );
