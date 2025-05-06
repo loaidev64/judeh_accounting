@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/pocketbase/constants/pocketbase_collections.dart';
 import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
+import 'package:judeh_accounting/pocketbase/helpers/pocketbase_helper.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 
@@ -17,6 +18,8 @@ class CompanyController extends GetxController {
   final _nameTextController = TextEditingController();
   final _phoneNumberTextController = TextEditingController();
   final _descriptionTextController = TextEditingController();
+
+  final _pocketbase = pocketbase().collection(PocketbaseCollections.companies);
 
   // Constants for repeated values
   static const _bottomSheetBorderRadius = BorderRadius.only(
@@ -38,22 +41,22 @@ class CompanyController extends GetxController {
     _nameTextController.dispose();
     _phoneNumberTextController.dispose();
     _descriptionTextController.dispose();
+    unsubscribeToPolling();
     super.onClose();
   }
+
+  late final Future<void> Function() unsubscribeToPolling;
 
   @override
   void onInit() async {
     await getData();
+    unsubscribeToPolling = await PocketbaseHelper.polling(collectionName: PocketbaseCollections.companies, onPoll: getData);
     super.onInit();
   }
 
   /// Fetches company data from the database.
   Future<void> getData() async {
-    // final database = DatabaseHelper.getDatabase();
-    // final data = await database.query(Company.tableName, limit: 25);
-    // companies.assignAll(data.map((e) => Company.fromDatabase(e)));
-
-    final response = await pocketbase().collection(PocketbaseCollections.companies).getList(
+    final response = await _pocketbase.getList(
       perPage: 25,
     );
 
@@ -137,10 +140,7 @@ class CompanyController extends GetxController {
               builder: (context) {
                 return AppButton(
                   onTap: () async {
-                    await DatabaseHelper.delete(
-                      model: company,
-                      tableName: Company.tableName,
-                    );
+                    await _pocketbase.delete(company.id);
                     Get.back();
                   },
                   text: 'حذف',
@@ -159,15 +159,9 @@ class CompanyController extends GetxController {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
                     if (isEditing) {
-                      await DatabaseHelper.update(
-                        model: company,
-                        tableName: Company.tableName,
-                      );
+                      await _pocketbase.update(company.id, body: company.toDatabase);
                     } else {
-                      await DatabaseHelper.create(
-                        model: company,
-                        tableName: Company.tableName,
-                      );
+                      await _pocketbase.create(body: company.toDatabase);
                     }
                     Get.back();
                   }

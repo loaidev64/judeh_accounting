@@ -43,8 +43,7 @@ class Category extends DatabaseModel {
         'name': name,
         'description': description,
         'type': type.index,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   static const tableName = 'categories';

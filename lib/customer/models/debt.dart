@@ -47,8 +47,7 @@ class Debt extends DatabaseModel {
         'company_id': companyId,
         'order_id': orderId,
         'amount': amount,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   static const tableName = 'debts';

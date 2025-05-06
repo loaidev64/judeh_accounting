@@ -43,8 +43,7 @@ class Company extends DatabaseModel {
         'name': name,
         'phoneNumber': phoneNumber,
         'description': description,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   static const tableName = 'companies';

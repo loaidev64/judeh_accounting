@@ -73,8 +73,7 @@ class Order extends DatabaseModel {
         'company_id': companyId,
         'type': type.index,
         'total': total,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   static const tableName = 'orders';

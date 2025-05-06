@@ -36,8 +36,7 @@ class Backup extends DatabaseModel {
         'model_id': modelId,
         'action': action.index, // Store enum index
         '_table': table,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   static const String tableName = '_backups';

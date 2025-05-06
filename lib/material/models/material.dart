@@ -63,8 +63,7 @@ class Material extends DatabaseModel {
         'category_id': categoryId, // New field
         'unit': unit.index,
         'barcode': barcode, // New nullable field
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   bool get isEmpty => id == 0;

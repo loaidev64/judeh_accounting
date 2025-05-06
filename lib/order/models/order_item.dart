@@ -64,8 +64,7 @@ class OrderItem extends DatabaseModel {
         'quantity': quantity,
         'order_id': orderId,
         'description': description,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   static const tableName = 'order_items';

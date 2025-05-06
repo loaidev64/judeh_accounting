@@ -45,8 +45,7 @@ class Expense extends DatabaseModel {
         'description': description,
         'cost': cost,
         'category_id': categoryId, // New field
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
+
       };
 
   static const tableName = 'expenses';
