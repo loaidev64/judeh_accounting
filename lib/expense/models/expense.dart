@@ -20,7 +20,7 @@ class Expense extends DatabaseModel {
   factory Expense.fromDatabase(Map<String, Object?> map) => Expense(
         id: map['id'] as String,
         description: map['description'] as String?,
-        cost: map['cost'] as double,
+        cost: double.parse(map['cost'].toString()),
         categoryId: map['category_id'] as String, // New field
         createdAt: DateTime.parse(map['created'] as String),
         updatedAt: map['updated'] != null

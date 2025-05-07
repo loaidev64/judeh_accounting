@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/pocketbase/constants/pocketbase_collections.dart';
+import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 
+import '../../pocketbase/helpers/pocketbase_helper.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
 import '../../shared/widgets/widgets.dart';
@@ -21,6 +24,8 @@ class ExpenseController extends GetxController {
   final loading = false.obs;
 
   int selectedExpenseIndex = -1; // Track selected expense for editing
+
+  final _pocketbase = pocketbase().collection(PocketbaseCollections.expenses);
 
   final _nameTextController = TextEditingController();
   final _costTextController = TextEditingController();
@@ -41,9 +46,14 @@ class ExpenseController extends GetxController {
     vertical: 10,
   );
 
+  late final Future<void> Function() unsubscribeToPolling;
+
   @override
-  void onInit() {
+  void onInit() async{
     getExpenses();
+
+    unsubscribeToPolling = await PocketbaseHelper.polling(collectionName: PocketbaseCollections.expenses, onPoll: getExpenses);
+
     super.onInit();
   }
 
@@ -52,6 +62,7 @@ class ExpenseController extends GetxController {
     _costTextController.dispose();
     _descriptionTextController.dispose();
     _categoryIdTextController.dispose();
+    unsubscribeToPolling();
     super.onClose();
   }
 
@@ -84,14 +95,11 @@ class ExpenseController extends GetxController {
   /// Fetches expenses from the database.
   void getExpenses([Category? category]) async {
     loading.value = true;
-    final List<Map<String, Object?>> expenses;
-    if (category == null) {
-      expenses = await DatabaseHelper.getDatabase()
-          .query(Expense.tableName, limit: 25);
-    } else {
-      expenses = await DatabaseHelper.getDatabase().query(Expense.tableName,
-          where: 'category_id = ?', whereArgs: [category.id], limit: 25);
-    }
+    final response = await _pocketbase.getList(
+      perPage: 25,
+      filter: category == null ? null : 'category_id="${category.id}"',
+    );
+    final expenses = response.items.map((e) => e.data);
     this.expenses.value = expenses.map(Expense.fromDatabase).toList();
     loading.value = false;
     _resetFields();
@@ -135,8 +143,6 @@ class ExpenseController extends GetxController {
       ),
       isScrollControlled: true,
     );
-
-    getExpenses(); // Refresh the expenses list
   }
 
   /// Builds the cost field.
@@ -167,7 +173,7 @@ class ExpenseController extends GetxController {
 
   /// Builds the category field using TypeAhead.
   Widget _buildCategoryField(Expense expense, {bool isEditing = false}) {
-    return TypeAheadField<Category>(
+    return TypeAheadField<Category>(  
       suggestionsCallback:
           categoryController.returnCategories, // Use CategoryController
       controller: _categoryIdTextController,
@@ -219,10 +225,7 @@ class ExpenseController extends GetxController {
               builder: (context) {
                 return AppButton(
                   onTap: () async {
-                    await DatabaseHelper.delete(
-                      model: expense,
-                      tableName: Expense.tableName,
-                    );
+                    await _pocketbase.delete(expense.id);
                     Get.back();
                   },
                   text: 'حذف',
@@ -241,7 +244,7 @@ class ExpenseController extends GetxController {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
 
-                    if (expense.categoryId == -1) {
+                    if (expense.categoryId.isEmpty) {
                       if (_categoryIdTextController.text.isNotEmpty) {
                         final bool result = await Get.dialog(
                           AlertDialog.adaptive(
@@ -278,12 +281,8 @@ class ExpenseController extends GetxController {
                             createdAt: DateTime.now(),
                           );
 
-                          final category = await DatabaseHelper.create(
-                            model: newCategory,
-                            tableName: Category.tableName,
-                          );
-
-                          expense.categoryId = category.id;
+                          final response = await pocketbase().collection(PocketbaseCollections.categories).create(body: newCategory.toDatabase);
+                          expense.categoryId = response.data['id'];
                         } else {
                           return;
                         }
@@ -291,15 +290,9 @@ class ExpenseController extends GetxController {
                     }
 
                     if (isEditing) {
-                      await DatabaseHelper.update(
-                        model: expense,
-                        tableName: Expense.tableName,
-                      );
+                      await _pocketbase.update(expense.id, body: expense.toDatabase);
                     } else {
-                      await DatabaseHelper.create(
-                        model: expense,
-                        tableName: Expense.tableName,
-                      );
+                      await _pocketbase.create(body: expense.toDatabase);
                     }
                     Get.back();
                   }
@@ -338,12 +331,8 @@ class ExpenseController extends GetxController {
     final expense = expenses[selectedExpenseIndex];
     _costTextController.text = expense.cost.toString();
     _descriptionTextController.text = expense.description ?? '';
-    _categoryIdTextController.text = (await DatabaseHelper.getDatabase().query(
-            Category.tableName,
-            columns: ['name'],
-            where: 'id = ?',
-            whereArgs: [expense.categoryId]))
-        .first['name'] as String;
+    final record = await pocketbase().collection(PocketbaseCollections.categories).getOne(expense.categoryId, fields: 'name');
+    _categoryIdTextController.text = record.data['name'];
 
     await _showExpenseForm(expense, isEditing: true);
   }

@@ -43,7 +43,7 @@ class CategoryController extends GetxController {
   Future<List<Category>> returnCategories([String? search]) async {
       final response = await _pocketbase.getList(
         perPage: 25,
-        filter: search == null ? 'type=${type.index}' : '(type=${type.index} && name~$search)',
+        filter: search?.isEmpty ?? true ? 'type=${type.index}' : '(type=${type.index} && name~"%$search%")',
       );
     final categories = response.items.map((e) => e.data);
     return categories.map(Category.fromDatabase).toList();
