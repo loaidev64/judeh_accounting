@@ -6,4 +6,6 @@ abstract class PocketbaseCollections {
   static const categories = 'categories';
 
   static const expenses = 'expenses';
+
+  static const materials = 'materials';
 }

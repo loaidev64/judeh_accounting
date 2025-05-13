@@ -68,7 +68,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
                         ? Column(
                             children: [
                               CategorySearch(
-                                  onSearch: controller.returnCategories,
+                                  onSearch: controller.categoryController.returnCategories,
                                   onSelected: controller.getMaterials),
                               SizedBox(height: 5.h),
                               AppTable(

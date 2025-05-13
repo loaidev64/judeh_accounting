@@ -1,6 +1,10 @@
+import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/material/controllers/material_controller.dart';
+import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 
 import '../theme/app_colors.dart';
@@ -18,6 +22,7 @@ class AppTextFormField extends StatelessWidget {
     this.suffix,
     this.counter,
     this.autofocus = false,
+    this.isPrice = false,
   });
 
   final TextEditingController? controller;
@@ -39,6 +44,8 @@ class AppTextFormField extends StatelessWidget {
   final Widget? suffix;
 
   final Widget? counter;
+
+  final bool isPrice;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +71,7 @@ class AppTextFormField extends StatelessWidget {
                 }
             return null;
           },
-          onSaved: onSaved,
+          onSaved: (newValue) => onSaved?.call(newValue?.replaceAll(',', '')),
           readOnly: readonly,
           controller: controller,
           textAlign: TextAlign.center,
@@ -72,13 +79,21 @@ class AppTextFormField extends StatelessWidget {
           style: AppTextStyles.appTextFormFieldText
               .copyWith(color: readonly ? AppColors.orange : AppColors.primary),
           decoration: InputDecoration(
-            suffix: suffix,
+            suffix: isPrice ? Text('ل.س') : suffix,
             counter: counter,
             border: border(),
             enabledBorder: border(),
             focusedBorder: border(),
             disabledBorder: border(),
           ),
+          inputFormatters: [
+            if(isPrice) CurrencyTextInputFormatter.currency(
+              // locale: 'ar',
+              decimalDigits: 0,
+              name: '',
+            ),
+          ],
+
         ),
       ],
     );

@@ -1,16 +1,15 @@
-extension PriceDouble on double {
-  String get toPriceString {
-    String s = '';
-    final reversedStringList = toInt().toString().split('').reversed.toList();
-    for (var i = 0; i < reversedStringList.length; i++) {
-      if (i % 3 == 0 && i != 0) {
-        s += ',';
-      }
-      s += reversedStringList[i];
-    }
+import 'package:intl/intl.dart';
 
-    return s.split('').reversed.join();
-  }
+extension PriceDouble on double {
+  String get toPriceString =>  NumberFormat.simpleCurrency(
+    name: ' ل.س',
+    locale: 'ar',
+    decimalDigits: 0,
+  ).format(this);
+
+  String get toPriceTextFormField =>  NumberFormat(
+    '#,###'
+  ).format(this);
 }
 
 extension IfIsIntDouble on double {

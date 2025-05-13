@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/order/models/order.dart';
+import 'package:judeh_accounting/pocketbase/constants/pocketbase_collections.dart';
+import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
 import 'package:judeh_accounting/shared/category/widgets/category_search.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
+import 'package:judeh_accounting/shared/logger/app_logger.dart';
 
+import '../../pocketbase/helpers/pocketbase_helper.dart';
 import '../../shared/category/controllers/category_controller.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_text_styles.dart';
@@ -24,6 +28,8 @@ class MaterialController extends GetxController {
 
   int selectedMaterialIndex = -1; // Track selected material for editing
 
+  final _pocketbase = pocketbase().collection(PocketbaseCollections.materials);
+
   final _idTextController = TextEditingController();
   final _nameTextController = TextEditingController();
   final _quantityTextController = TextEditingController();
@@ -36,9 +42,13 @@ class MaterialController extends GetxController {
     vertical: 10,
   );
 
+  late final Future<void> Function() unsubscribeToPolling;
+
   @override
-  void onInit() {
+  void onInit() async {
     getMaterials();
+    unsubscribeToPolling = await PocketbaseHelper.polling(
+        collectionName: PocketbaseCollections.materials, onPoll: getMaterials);
     super.onInit();
   }
 
@@ -50,6 +60,7 @@ class MaterialController extends GetxController {
     _costTextController.dispose();
     _priceTextController.dispose();
     _categoryIdTextController.dispose();
+    unsubscribeToPolling();
     super.onClose();
   }
 
@@ -84,14 +95,11 @@ class MaterialController extends GetxController {
   /// Fetches materials from the database.
   void getMaterials([Category? category]) async {
     loading.value = true;
-    final List<Map<String, Object?>> materials;
-    if (category == null) {
-      materials = await DatabaseHelper.getDatabase()
-          .query(m.Material.tableName, limit: 25);
-    } else {
-      materials = await DatabaseHelper.getDatabase().query(m.Material.tableName,
-          where: 'category_id = ?', whereArgs: [category.id], limit: 25);
-    }
+    final response = await _pocketbase.getList(
+      perPage: 25,
+      filter: category == null ? null : 'category_id="${category.id}"',
+    );
+    final materials = response.items.map((e) => e.data);
     this.materials.value = materials.map(m.Material.fromDatabase).toList();
     loading.value = false;
     _resetFields();
@@ -102,23 +110,6 @@ class MaterialController extends GetxController {
     categoryController.categories.value =
         await categoryController.returnCategories();
     _resetFields();
-  }
-
-  /// Returns a list of categories, optionally filtered by search.
-  Future<List<Category>> returnCategories([String? search]) async {
-    final List<Map<String, Object?>> categories;
-    if (search == null) {
-      categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: 'type = ?',
-          whereArgs: [CategoryType.material.index],
-          limit: 25);
-    } else {
-      categories = await DatabaseHelper.getDatabase().query(Category.tableName,
-          where: "name LIKE ? AND type = ?",
-          whereArgs: ['%$search%', CategoryType.material.index],
-          limit: 25);
-    }
-    return categories.map(Category.fromDatabase).toList();
   }
 
   /// Opens a bottom sheet to create or edit a material.
@@ -263,8 +254,6 @@ class MaterialController extends GetxController {
       ),
       // isScrollControlled: true,
     );
-
-    getMaterials(); // Refresh the materials list
   }
 
   /// Builds the name field.
@@ -308,6 +297,7 @@ class MaterialController extends GetxController {
             isRequired: true,
             keyboardType: TextInputType.number,
             controller: isEditing ? _costTextController : null,
+            isPrice: true,
           ),
         ),
       ],
@@ -321,10 +311,14 @@ class MaterialController extends GetxController {
         Expanded(
           child: AppTextFormField(
             label: 'السعر',
-            onSaved: (value) => material.price = double.parse(value ?? '0.0'),
+            onSaved: (value) {
+              AppLogger.info('price is $value');
+              material.price = double.parse(value ?? '0.0');
+            },
             isRequired: true,
             keyboardType: TextInputType.number,
             controller: isEditing ? _priceTextController : null,
+            isPrice: true,
           ),
         ),
       ],
@@ -335,7 +329,7 @@ class MaterialController extends GetxController {
   Widget _buildCategoryField(m.Material material, {bool isEditing = false}) {
     return CategorySearch(
       controller: _categoryIdTextController,
-      onSearch: returnCategories,
+      onSearch: categoryController.returnCategories,
       onSelected: ([category]) => material.categoryId = category!.id,
     );
   }
@@ -350,15 +344,11 @@ class MaterialController extends GetxController {
               builder: (context) {
                 return AppButton(
                   onTap: () async {
-                    final database = DatabaseHelper.getDatabase();
-                    final materialHaveChildren = await database.query(
-                      Order.tableName,
-                      columns: ['COUNT(*)'],
-                      where: 'material_id = ?',
-                      whereArgs: [material.id],
-                    );
-                    if (materialHaveChildren.isEmpty ||
-                        materialHaveChildren.first['COUNT(*)'] == 0) {
+                    try {
+                      await _pocketbase.delete(material.id);
+                      Get.back();
+                    } catch (e, trace) {
+                      AppLogger.exception(e, trace);
                       await Get.dialog(
                         AlertDialog.adaptive(
                           title: Text(
@@ -381,13 +371,7 @@ class MaterialController extends GetxController {
                           ],
                         ),
                       );
-                      return;
                     }
-                    await DatabaseHelper.delete(
-                      model: material,
-                      tableName: m.Material.tableName,
-                    );
-                    Get.back();
                   },
                   text: 'حذف',
                   color: Colors.red,
@@ -408,7 +392,7 @@ class MaterialController extends GetxController {
                       return;
                     }
 
-                    if (material.categoryId == -1) {
+                    if (material.categoryId.isEmpty) {
                       if (_categoryIdTextController.text.isNotEmpty) {
                         final bool result = await Get.dialog(
                           AlertDialog.adaptive(
@@ -440,18 +424,15 @@ class MaterialController extends GetxController {
                         if (result) {
                           final newCategory = Category(
                             name: _categoryIdTextController.text,
-                            type: CategoryType.material,
+                            type:
+                                CategoryType.material, // Changed to expense type
                             createdAt: DateTime.now(),
                           );
 
-                          // Create the category and get its ID
-                          final category = await DatabaseHelper.create(
-                            model: newCategory,
-                            tableName: Category.tableName,
-                          );
-
-                          // Update material with new category ID
-                          material.categoryId = category.id;
+                          final response = await pocketbase()
+                              .collection(PocketbaseCollections.categories)
+                              .create(body: newCategory.toDatabase);
+                          material.categoryId = response.data['id'];
                         } else {
                           return; // Cancel the operation
                         }
@@ -459,15 +440,10 @@ class MaterialController extends GetxController {
                     }
 
                     if (isEditing) {
-                      await DatabaseHelper.update(
-                        model: material,
-                        tableName: m.Material.tableName,
-                      );
+                      await _pocketbase.update(material.id,
+                          body: material.toDatabase);
                     } else {
-                      await DatabaseHelper.create(
-                        model: material,
-                        tableName: m.Material.tableName,
-                      );
+                      await _pocketbase.create(body: material.toDatabase);
                     }
                     Get.back();
                   }
@@ -484,43 +460,48 @@ class MaterialController extends GetxController {
   }
 
   Future<bool> _checkIfBarcodeOrNameAlreadyExsists(m.Material material) async {
-    if (material.barcode == null) {
-      return false;
-    }
-    final database = DatabaseHelper.getDatabase();
-    final dataMaterialsHaveTheSameBarcode = await database.query(
-        m.Material.tableName,
-        where: 'barcode = ? AND id != ?',
-        whereArgs: [material.barcode, material.id]);
-    if (dataMaterialsHaveTheSameBarcode.isEmpty) {
+    AppLogger.info('material barcode is ${material.barcode}');
+    if (material.barcode?.isEmpty ?? true) {
       return false;
     }
 
-    final materialsHaveTheSameBarcode = dataMaterialsHaveTheSameBarcode
-        .map((e) => m.Material.fromDatabase(e))
-        .toList();
+    try {
+      final reponse = await _pocketbase.getList(
+        filter: '(barcode = "%${material.barcode}%" && id != "${material.id}")',
+      );
+      if (reponse.items.isEmpty) {
+        return false;
+      }
 
-    if (materialsHaveTheSameBarcode
-        .where((element) => element.name == material.name)
-        .isNotEmpty) {
-      await Get.dialog(AlertDialog.adaptive(
-        title: Text(
-          'خطأ',
-          style: TextStyle(
-            color: Colors.red,
-            fontSize: 24.sp,
-            fontFamily: appFontFamily,
+      final materialsHaveTheSameBarcode = reponse.items
+          .map((e) => e.data)
+          .map((e) => m.Material.fromDatabase(e));
+
+      if (materialsHaveTheSameBarcode
+          .where((element) => element.name == material.name)
+          .isNotEmpty) {
+        await Get.dialog(AlertDialog.adaptive(
+          title: Text(
+            'خطأ',
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 24.sp,
+              fontFamily: appFontFamily,
+            ),
           ),
-        ),
-        content: Text(
-          'لا يمكنك إضافة هذا المنتج لانك قمت بالفعل بإنشاء منتج له نفس الباركود ونفس الاسم',
-          style: TextStyle(fontFamily: appFontFamily),
-        ),
-      ));
-      return true;
-    }
+          content: Text(
+            'لا يمكنك إضافة هذا المنتج لانك قمت بالفعل بإنشاء منتج له نفس الباركود ونفس الاسم',
+            style: TextStyle(fontFamily: appFontFamily),
+          ),
+        ));
+        return true;
+      }
 
-    return false;
+      return false;
+    } catch (e, trace) {
+      AppLogger.exception(e, trace);
+      return false;
+    }
   }
 
   /// Opens a bottom sheet to create a new material.
@@ -547,14 +528,13 @@ class MaterialController extends GetxController {
     _idTextController.text = material.id.toString();
     _nameTextController.text = material.name;
     _quantityTextController.text = material.quantity.asIntIfItIsAnInt;
-    _costTextController.text = material.cost.toInt().toString();
-    _priceTextController.text = material.price.toInt().toString();
-    _categoryIdTextController.text = (await DatabaseHelper.getDatabase().query(
-            Category.tableName,
-            columns: ['name'],
-            where: 'id = ?',
-            whereArgs: [material.categoryId]))
-        .first['name'] as String;
+    _costTextController.text = material.cost.toPriceTextFormField;
+    _priceTextController.text = material.price.toPriceTextFormField;
+
+    final record = await pocketbase()
+        .collection(PocketbaseCollections.categories)
+        .getOne(material.categoryId, fields: 'name');
+    _categoryIdTextController.text = record.data['name'];
 
     await _showMaterialForm(material, isEditing: true);
   }

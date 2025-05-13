@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.1+2
 
 environment:
-  sdk: ^3.6.0
+  sdk: '>=3.1.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -49,6 +49,8 @@ dependencies:
   pocketbase_server_flutter: ^1.1.0
   pocketbase: ^0.22.0
   logger: ^2.5.0
+  intl: ^0.20.2
+  currency_text_input_formatter: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -60,9 +62,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
-  mockito: ^5.4.5
+#  mockito: ^5.4.5
   get_test: ^4.0.1
-  build_runner: ^2.4.15
+#  build_runner: ^2.4.15
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
