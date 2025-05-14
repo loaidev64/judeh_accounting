@@ -1,9 +1,14 @@
 import 'package:get/get.dart';
+import 'package:judeh_accounting/order/models/order_item.dart';
 import 'package:judeh_accounting/order/screens/order_management_screen.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
+import 'package:judeh_accounting/shared/logger/app_logger.dart';
 
 import '../../company/models/company.dart';
 import '../../customer/models/customer.dart';
+import '../../pocketbase/constants/pocketbase_collections.dart';
+import '../../pocketbase/controllers/pocketbase_controller.dart';
+import '../../pocketbase/helpers/pocketbase_helper.dart';
 import '../models/order.dart';
 
 class OrderController extends GetxController {
@@ -11,10 +16,25 @@ class OrderController extends GetxController {
   final orders = <Order>[].obs;
   final loading = false.obs;
 
+  final _orderViewPocketbase = pocketbase().collection(PocketbaseCollections.ordersView);
+  final _orderItemsViewPocketbase = pocketbase().collection(PocketbaseCollections.orderItemsView);
+  final _companyPocketbase = pocketbase().collection(PocketbaseCollections.companies);
+  final _customersPocketbase = pocketbase().collection(PocketbaseCollections.customers);
+
+  late final Future<void> Function() unsubscribeToPolling;
+
   @override
-  void onInit() {
+  void onInit() async{
     getOrders();
+    unsubscribeToPolling = await PocketbaseHelper.polling(
+        collectionName: PocketbaseCollections.orderItems, onPoll: getOrders);
     super.onInit();
+  }
+
+  @override
+  void onClose() {
+    unsubscribeToPolling();
+    super.onClose();
   }
 
   void changeType(OrderType type) {
@@ -27,116 +47,52 @@ class OrderController extends GetxController {
     orders.clear();
     loading.value = true; // Start loading
 
-    final database = DatabaseHelper.getDatabase();
-
-    // Fetch orders based on the current type
-    final orderData = await database.query(
-      'orders LEFT JOIN debts ON orders.id = debts.order_id',
-      where: 'type = ?',
-      columns: [
-        'orders.id',
-        'orders.customer_id',
-        'orders.company_id',
-        'orders.type',
-        'orders.total',
-        'orders.createdAt',
-        'orders.updatedAt',
-        'debts.amount AS debt_amount',
-      ],
-      whereArgs: [currentType.value.index],
-      limit: 25,
-    );
-
-    // If no orders are found, clear the list and return
-    if (orderData.isEmpty) {
-      return;
-    }
-
-    final data = <Map<String, Object?>>[];
-    if (currentType.value.canHaveCustomer) {
-      final customerIds = orderData
-          .where((element) => element['customer_id'] != null)
-          .map((e) => e['customer_id'])
-          .toList();
-      final customers = await database.query(
-        Customer.tableName,
-        distinct: true,
-        columns: ['id', 'name'],
-        where:
-            'id in (${List.generate(customerIds.length, (_) => '?').join(',')})',
-        whereArgs: customerIds,
-      );
-      data.addAll(customers);
-    } else {
-      final companyIds = orderData
-          .where((element) => element['company_id'] != null)
-          .map((e) => e['company_id'])
-          .toList();
-      final companies = await database.query(
-        Company.tableName,
-        distinct: true,
-        columns: ['id', 'name'],
-        where:
-            'id in (${List.generate(companyIds.length, (_) => '?').join(',')})',
-        whereArgs: companyIds,
-      );
-      data.addAll(companies);
-    }
-
-    // Fetch order items for the retrieved orders
-    final orderIds = orderData.map((e) => e['id'] as int).toList();
-    final orderItemsData = await database.query(
-      'order_items LEFT JOIN materials ON order_items.material_id = materials.id',
-      columns: [
-        'order_items.id',
-        'material_id',
-        'order_items.price',
-        'order_items.quantity',
-        'order_items.description',
-        'order_id',
-        'order_items.createdAt',
-        'order_items.updatedAt',
-        'materials.name AS material_name'
-      ],
-      where: 'order_id IN (${List.filled(orderIds.length, '?').join(',')})',
-      whereArgs: orderIds,
+    var response = await _orderViewPocketbase.getList(
+      perPage: 25,
+      filter: 'type = ${currentType.value.index}',
     );
 
     // Group order items by their order_id
-    final List<Map<String, Object?>> orderItemsMap = [];
-    for (var i = 0; i < orderData.length; i++) {
-      orderItemsMap.add({
-        ...orderData[i],
-        if (!currentType.value.canHaveCustomer &&
-            orderData[i]['company_id'] != null)
-          'company_name': data.firstWhere(
-              (element) => element['id'] == orderData[i]['company_id'])['name'],
-        if (currentType.value.canHaveCustomer &&
-            orderData[i]['customer_id'] != null)
-          'customer_name': data.firstWhere((element) =>
-              element['id'] == orderData[i]['customer_id'])['name'],
-        'order_items': orderItemsData
-            .where((element) => element['order_id'] == orderData[i]['id'])
-            .toList(),
-      });
+    final orderItemsMap = response.items.map((e) => e.data);
+    var _orders = orderItemsMap.map(Order.fromDatabase);
+    if(currentType.value.canHaveCustomer){
+      response = await _customersPocketbase.getList(
+        perPage: 25,
+        filter: _orders.where((element) => element.customerId != null).map((element) => 'id="${element.customerId}"').join('||'),
+        fields: 'id,name',
+      );
+      _orders = _orders.map((e) => e.copyWith(
+        customerName: response.items.map((e) => e.data).where((element) => element['id'] == e.customerId).firstOrNull?['name'],
+      ));
+    }else{
+    response = await _companyPocketbase.getList(
+      perPage: 25,
+      filter: _orders.where((element) => element.companyId != null).map((element) => 'id="${element.companyId}"').join('||'),
+      fields: 'id,name',
+    );
+    _orders = _orders.map((e) => e.copyWith(
+      companyName: response.items.map((e) => e.data).where((element) => element['id'] == e.companyId).firstOrNull?['name'],
+    ));
     }
+    if(_orders.isNotEmpty){
+      final res = await _orderItemsViewPocketbase.getFullList(
+        batch: 1000,
+        filter: _orders.map((element) => 'order_id="${element.id}"').join('||'),
+      );
 
-    orders.addAll(orderItemsMap.map(Order.fromDatabase));
+      for(final order in _orders){
+        orders.add(order.copyWith(
+          items: res.where((element) => element.data['order_id'] == order.id).map((e) => OrderItem.fromDatabase(e.data)).toList(),
+        ));
+      }
+    }
 
     loading.value = false; // Stop loading
   }
 
-  Future<void> createOrder() async {
-    await Get.toNamed(OrderManagementScreen.routeName,
+  Future<void> createOrder() async => await Get.toNamed(OrderManagementScreen.routeName,
         arguments: (currentType.value, null));
 
-    getOrders();
-  }
-
-  Future<void> editOrder(Order order) async {
-    await Get.toNamed(OrderManagementScreen.routeName,
+  Future<void> editOrder(Order order) async => await Get.toNamed(OrderManagementScreen.routeName,
         arguments: (currentType.value, order));
-
-    getOrders();
-  }
 }

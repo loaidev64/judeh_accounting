@@ -18,14 +18,23 @@ class PocketbaseController extends GetxController {
 
   @override
   void onInit() {
-    stopServer();
+    // stopServer();
     startServer();
     super.onInit();
   }
 
   void startServer() async {
     _localIpAddress = await PocketbaseServerFlutter.localIpAddress;
-    if((await PocketbaseServerFlutter.isRunning)!) return;
+    if((await PocketbaseServerFlutter.isRunning)!) {
+      if (_localIpAddress != null) {
+        pocketbase.baseURL = 'http://$_localIpAddress:$port';
+        // await _storage.setString(
+        //     LocalStorageHelper.keys.ipServer, pocketbase.baseURL);
+
+        loginAsAdmin();
+      }
+      return;
+    }
 
     await PocketbaseServerFlutter.start(
       superUserEmail: adminEmail,

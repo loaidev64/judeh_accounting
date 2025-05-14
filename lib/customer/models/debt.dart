@@ -22,7 +22,7 @@ class Debt extends DatabaseModel {
         customerId: map['customer_id'] as String?,
         companyId: map['company_id'] as String?,
         orderId: map['order_id'] as String?,
-        amount: map['amount'] as double,
+    amount: double.tryParse(map['amount']?.toString() ?? '') ?? 0,
         createdAt: DateTime.parse(map['created'] as String),
         updatedAt: map['updated'] != null
             ? DateTime.parse(map['updated'] as String)

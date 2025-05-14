@@ -79,7 +79,7 @@ class AppTextFormField extends StatelessWidget {
           style: AppTextStyles.appTextFormFieldText
               .copyWith(color: readonly ? AppColors.orange : AppColors.primary),
           decoration: InputDecoration(
-            suffix: isPrice ? Text('ل.س') : suffix,
+            suffix: isPrice && suffix == null ? Text('ل.س') : suffix,
             counter: counter,
             border: border(),
             enabledBorder: border(),

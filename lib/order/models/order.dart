@@ -1,4 +1,5 @@
 import 'package:judeh_accounting/order/models/order_item.dart';
+import 'package:judeh_accounting/shared/logger/app_logger.dart';
 import 'package:judeh_accounting/shared/models/database_model.dart';
 
 class Order extends DatabaseModel {
@@ -33,25 +34,27 @@ class Order extends DatabaseModel {
   });
 
   /// Factory constructor to create a [Order] object from a database map.
-  factory Order.fromDatabase(Map<String, Object?> map) => Order(
+  factory Order.fromDatabase(Map<String, Object?> map) {
+    return Order(
         id: map['id'] as String,
         customerId: map['customer_id'] as String?,
         companyId: map['company_id'] as String?,
         customerName: map['customer_name'] as String?,
         companyName: map['company_name'] as String?,
         type: OrderType.values[map['type'] as int],
-        total: map['total'] as double,
+        total: double.tryParse(map['total']?.toString() ?? '') ?? 0,
         items: map['order_items'] != null
             ? (map['order_items'] as List)
                 .map((e) => OrderItem.fromDatabase(e))
                 .toList()
             : [],
-        debtAmount: map['debt_amount'] as double?,
+    debtAmount: map['debt_id'].toString().isEmpty ? null : double.tryParse(map['debt_amount']?.toString() ?? ''),
         createdAt: DateTime.parse(map['created'] as String),
         updatedAt: map['updated'] != null
             ? DateTime.parse(map['updated'] as String)
             : null,
       );
+  }
 
   /// Factory constructor to create an empty [Order] object.
   factory Order.empty(OrderType type) => Order(
@@ -104,6 +107,11 @@ class Order extends DatabaseModel {
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
+
+  @override
+  String toString() {
+    return 'Order{id: $id,type: $type, total: $total}';
+  }
 }
 
 enum OrderType {

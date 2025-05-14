@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:judeh_accounting/home/screens/home_screen.dart';
+import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
+import 'package:judeh_accounting/shared/logger/app_logger.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import 'package:judeh_accounting/shared/theme/app_text_styles.dart';
 
@@ -46,9 +48,16 @@ class AppScaffold extends StatelessWidget {
                 centerTitle: true,
                 titleTextStyle: AppTextStyles.appScaffoldAppBarText,
                 actions: [
-                  Padding(
-                    padding: EdgeInsets.only(left: 15.w),
-                    child: Image.asset('assets/logos/logo.png'),
+                  GestureDetector(
+                    onTap: () {
+                      Get.find<PocketbaseController>().loginAsAdmin();
+                      // Get.find<PocketbaseController>().startServer();
+                      AppLogger.info('current ip is: ${pocketbase().baseURL}');
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 15.w),
+                      child: Image.asset('assets/logos/logo.png'),
+                    ),
                   ),
                 ],
                 // Allows the user to reveal the app bar if they begin scrolling

@@ -48,5 +48,5 @@ class Company extends DatabaseModel {
 
   static const tableName = 'companies';
 
-  bool get isEmpty => id == 0;
+  bool get isEmpty => id.isEmpty;
 }

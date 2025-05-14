@@ -7,9 +7,12 @@ import 'package:judeh_accounting/customer/models/debt.dart';
 import 'package:judeh_accounting/customer/widgets/customer_search.dart';
 import 'package:judeh_accounting/order/models/order.dart';
 import 'package:judeh_accounting/order/models/order_item.dart';
+import 'package:judeh_accounting/pocketbase/constants/pocketbase_collections.dart';
+import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
 import 'package:judeh_accounting/shared/extensions/double.dart';
 import 'package:judeh_accounting/shared/extensions/order_item_list.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
+import 'package:judeh_accounting/shared/logger/app_logger.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -35,6 +38,12 @@ class OrderManagementController extends GetxController {
   late OrderType type;
 
   final items = <OrderItem>[].obs;
+
+  final _orderPocketbase = pocketbase().collection(PocketbaseCollections.orders);
+  final _materialPocketbase = pocketbase().collection(PocketbaseCollections.materials);
+  final _companyPocketbase = pocketbase().collection(PocketbaseCollections.companies);
+  final _customersPocketbase = pocketbase().collection(PocketbaseCollections.customers);
+  final _debtsPocketbase = pocketbase().collection(PocketbaseCollections.debts);
 
   final quantityController = TextEditingController();
   final priceController = TextEditingController();
@@ -73,125 +82,71 @@ class OrderManagementController extends GetxController {
   }
 
   void _loadDebtIfExsists(Order order) async {
-    final debtData = await DatabaseHelper.getDatabase().query(
-      Debt.tableName,
-      where: 'order_id = ?',
-      whereArgs: [order.id],
-    );
+    try{
+      var response = await _debtsPocketbase.getFirstListItem('order_id="${order.id}"');
+      AppLogger.info('data for debt is: ${response.data}');
+      debt = Debt.fromDatabase(response.data);
 
-    if (debtData.isNotEmpty) {
-      debt = Debt.fromDatabase(debtData.first);
-
-      debtController.text = debt!.amount.toPriceString;
+      debtController.text = debt!.amount.toPriceTextFormField;
 
       if (!type.canHaveCustomer) return;
 
-      final customerData = await DatabaseHelper.getDatabase().query(
-        Customer.tableName,
-        where: 'id = ?',
-        whereArgs: [debt!.customerId],
-      );
+      response = await _customersPocketbase.getOne(debt!.customerId!);
 
-      customer = Customer.fromDatabase(customerData.first);
+      customer = Customer.fromDatabase(response.data);
 
       customerController.text = customer!.name;
+
+    }catch(e, trace){
+      AppLogger.exception(e, trace);
     }
   }
 
   void _loadItem(Order order) async {
-    final materialsData = await DatabaseHelper.getDatabase().query(
-      Material.tableName,
-      columns: [
-        'id',
-        'name',
-        'unit',
-      ],
-      distinct: true,
-      where:
-          'id in (${List.generate(order.items.length, (_) => '?').join(',')})',
-      whereArgs: order.items.map((e) => e.materialId).toList(),
-    );
-
-    items.addAll(order.items.map((item) {
-      try {
-        return item.copyWith(
-          materialName: materialsData.firstWhere(
-              (element) => element['id'] == item.materialId)['name'] as String,
-          materialUnit: Unit.values[materialsData.firstWhere(
-              (element) => element['id'] == item.materialId)['unit'] as int],
-        );
-      } catch (e) {
-        return item;
-      }
-    }));
+    items.addAll(order.items);
   }
 
   void _loadCompany(Order order) async {
-    final companyData = await DatabaseHelper.getDatabase().query(
-      Company.tableName,
-      where: 'id = ?',
-      whereArgs: [order.companyId],
-    );
+    final response = await _companyPocketbase.getOne(order.companyId!);
 
-    company = Company.fromDatabase(companyData.first);
+    company = Company.fromDatabase(response.data);
 
     companyController.text = company!.name;
   }
 
   Future<List<Material>> returnMaterials([String? search]) async {
-    final database = DatabaseHelper.getDatabase();
-    final List<Map<String, Object?>> data;
-    if (search == null) {
-      data = await database.query(Material.tableName, limit: 25);
-    } else {
-      data = await database.query(
-        Material.tableName,
-        where: 'name LIKE ? OR barcode LIKE ?',
-        whereArgs: ['%$search%', '%$search%'],
-        limit: 25,
-      );
-    }
+    final response = await _materialPocketbase.getList(
+      filter: search == null ? null : '(name~"%$search%" || barcode~"%$search%")',
+      perPage: 25,
+    );
+    final data = response.items.map((e) => e.data);
 
     return data.map(Material.fromDatabase).toList();
   }
 
   Future<List<Customer>> returnCustomers([String? search]) async {
-    final database = DatabaseHelper.getDatabase();
-    final List<Map<String, Object?>> data;
-    if (search == null) {
-      data = await database.query(Customer.tableName, limit: 25);
-    } else {
-      data = await database.query(
-        Customer.tableName,
-        where: 'name LIKE ? OR description LIKE ?',
-        whereArgs: ['%$search%', '%$search%'],
-        limit: 25,
-      );
-    }
+    final response = await _customersPocketbase.getList(
+      filter: search == null ? null : '(name~"%$search%" || description~"%$search%")',
+      perPage: 25,
+    );
+    final data = response.items.map((e) => e.data);
 
     return data.map(Customer.fromDatabase).toList();
   }
 
   Future<List<Company>> returnCompanies([String? search]) async {
-    final database = DatabaseHelper.getDatabase();
-    final List<Map<String, Object?>> data;
-    if (search == null) {
-      data = await database.query(Company.tableName, limit: 25);
-    } else {
-      data = await database.query(
-        Company.tableName,
-        where: 'name LIKE ? OR description LIKE ?',
-        whereArgs: ['%$search%', '%$search%'],
-        limit: 25,
-      );
-    }
+    final response = await _companyPocketbase.getList(
+      filter: search == null ? null : '(name~"%$search%" || description~"%$search%")',
+      perPage: 25,
+    );
+    final data = response.items.map((e) => e.data);
 
     return data.map(Company.fromDatabase).toList();
   }
 
   void editItem(int index, {bool withoutQuantity = false}) async {
     final item = items[index];
-    if (item.materialId == 0) {
+    if (item.materialId.isEmpty) {
       withoutQuantity = true;
       quantityController.text = item.description;
     } else {
@@ -368,6 +323,7 @@ class OrderManagementController extends GetxController {
                                     controller: debtController,
                                     label: 'مقبوض',
                                     keyboardType: TextInputType.number,
+                                    isPrice: true,
                                     onSaved: (value) => debt.amount =
                                         double.tryParse(value ?? '') ?? 0,
                                     isRequired: true,
@@ -379,15 +335,13 @@ class OrderManagementController extends GetxController {
                                   ),
                               ],
                             ),
-                        false.obs),
+                        (this.debt != null).obs),
                     SizedBox(height: 5.h),
                     Builder(builder: (context) {
                       return AppButton(
                         onTap: () async {
                           if (Form.of(context).validate()) {
                             Form.of(context).save();
-
-                            final database = DatabaseHelper.getDatabase();
 
                             Order order = this.order?.copyWith(
                                       total: items.total,
@@ -401,71 +355,66 @@ class OrderManagementController extends GetxController {
                               order.customerId = customer!.id;
                               debt.customerId = customer!.id;
                             } else if (customerController.text.isNotEmpty) {
-                              final customerData = await database.query(
-                                Customer.tableName,
-                                where: 'name = ?',
-                                whereArgs: [customerController.text],
-                              );
-                              if (customerData.isNotEmpty) {
-                                final cust =
-                                    Customer.fromDatabase(customerData.first);
-                                customer = cust;
-                                order.customerId = cust.id;
-                                debt.customerId = cust.id;
-                              } else {
-                                final bool result = await Get.dialog(
-                                  AlertDialog.adaptive(
-                                    title: Text(
-                                      'تحذير',
-                                      style: TextStyle(
-                                        color: AppColors.orange,
-                                        fontSize: 24.sp,
-                                        fontFamily: appFontFamily,
-                                      ),
-                                    ),
-                                    content: Text(
-                                      'لا يوجد لديك هذا الزبون "${customerController.text}"، هل تريد إضافته إلى الزبائن؟',
-                                      style:
-                                          TextStyle(fontFamily: appFontFamily),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Get.back(result: false),
-                                        child: Text('إلغاء'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () => Get.back(result: true),
-                                        child: Text('موافق'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-
-                                if (result) {
-                                  final newCustomer = Customer(
-                                    name: customerController.text,
-                                  );
-
-                                  // Create the category and get its ID
-                                  final cust = await DatabaseHelper.create(
-                                    model: newCustomer,
-                                    tableName: Customer.tableName,
-                                  );
-
+                              try{
+                                final response = await _customersPocketbase.getFirstListItem('name="${customerController.text}"');
+                                  final cust =
+                                  Customer.fromDatabase(response.data);
                                   customer = cust;
                                   order.customerId = cust.id;
                                   debt.customerId = cust.id;
-                                }
+                              }catch(e, trace){
+                               AppLogger.exception(e, trace);
+                               final bool result = await Get.dialog(
+                                 AlertDialog.adaptive(
+                                   title: Text(
+                                     'تحذير',
+                                     style: TextStyle(
+                                       color: AppColors.orange,
+                                       fontSize: 24.sp,
+                                       fontFamily: appFontFamily,
+                                     ),
+                                   ),
+                                   content: Text(
+                                     'لا يوجد لديك هذا الزبون "${customerController.text}"، هل تريد إضافته إلى الزبائن؟',
+                                     style:
+                                     TextStyle(fontFamily: appFontFamily),
+                                   ),
+                                   actions: [
+                                     TextButton(
+                                       onPressed: () =>
+                                           Get.back(result: false),
+                                       child: Text('إلغاء'),
+                                     ),
+                                     TextButton(
+                                       onPressed: () => Get.back(result: true),
+                                       child: Text('موافق'),
+                                     ),
+                                   ],
+                                 ),
+                               );
+
+                               if (result) {
+                                 final newCustomer = Customer(
+                                   name: customerController.text,
+                                 );
+                                 final response = await _customersPocketbase.create(body: newCustomer.toDatabase);
+
+                                 // Create the category and get its ID
+                                 final cust = Customer.fromDatabase(response.data);
+
+                                 customer = cust;
+                                 order.customerId = cust.id;
+                                 debt.customerId = cust.id;
+                               }
                               }
                             }
 
                             if (this.order != null) {
-                              order = await DatabaseHelper.update(
-                                  model: order, tableName: Order.tableName);
+                              final response = await _orderPocketbase.update(order.id, body: order.toDatabase);
+                              order = Order.fromDatabase(response.data);
                             } else {
-                              order = await DatabaseHelper.create(
-                                  model: order, tableName: Order.tableName);
+                              final response = await _orderPocketbase.create(body: order.toDatabase);
+                              order = Order.fromDatabase(response.data);
                             }
 
                             if (this.order != null) {
@@ -474,32 +423,32 @@ class OrderManagementController extends GetxController {
                                   .items
                                   .delete(type); // delete old items
                             }
-
+                            final orderItemBatch = pocketbase().createBatch();
                             for (final item in items) {
-                              await DatabaseHelper.create(
-                                  model: item.copyWith(orderId: order.id),
-                                  tableName: OrderItem.tableName);
-
-                              if (type == OrderType.sell) {
-                                await database.rawUpdate('''
-                                  UPDATE ${Material.tableName} SET quantity = quantity - ? WHERE id = ?
-                                  ''', [item.quantity, item.materialId]);
-                              } else {
-                                // it will be sell Refund
-                                await database.rawUpdate('''
-                                  UPDATE ${Material.tableName} SET quantity = quantity + ? WHERE id = ?
-                                  ''', [item.quantity, item.materialId]);
-                              }
+                              orderItemBatch.collection(PocketbaseCollections.orderItems).create(body: item.copyWith(orderId: order.id).toDatabase);
+                              // await DatabaseHelper.create(
+                              //     model: item.copyWith(orderId: order.id),
+                              //     tableName: OrderItem.tableName);
+                              //
+                              // if (type == OrderType.sell) {
+                              //   await database.rawUpdate('''
+                              //     UPDATE ${Material.tableName} SET quantity = quantity - ? WHERE id = ?
+                              //     ''', [item.quantity, item.materialId]);
+                              // } else {
+                              //   // it will be sell Refund
+                              //   await database.rawUpdate('''
+                              //     UPDATE ${Material.tableName} SET quantity = quantity + ? WHERE id = ?
+                              //     ''', [item.quantity, item.materialId]);
+                              // }
                             }
+                            await orderItemBatch.send();
 
                             if (customer != null) {
                               if (this.debt != null) {
-                                await DatabaseHelper.update(
-                                    model: debt, tableName: Debt.tableName);
+                                await _debtsPocketbase.update(debt.id, body: debt.toDatabase);
                               } else {
                                 debt.orderId = order.id;
-                                await DatabaseHelper.create(
-                                    model: debt, tableName: Debt.tableName);
+                                await _debtsPocketbase.create(body: debt.toDatabase);
                               }
                             }
                             successful = true;
@@ -566,9 +515,6 @@ class OrderManagementController extends GetxController {
                                       if (Form.of(context).validate()) {
                                         Form.of(context).save();
 
-                                        final database =
-                                            DatabaseHelper.getDatabase();
-
                                         if (company.isEmpty &&
                                             companyController.text.isNotEmpty) {
                                           final bool result = await Get.dialog(
@@ -606,12 +552,11 @@ class OrderManagementController extends GetxController {
                                               name: companyController.text,
                                             );
 
+                                            final response = await _companyPocketbase.create(body: newCompany.toDatabase);
+
                                             // Create the category and get its ID
                                             company =
-                                                await DatabaseHelper.create(
-                                              model: newCompany,
-                                              tableName: Company.tableName,
-                                            );
+                                                Company.fromDatabase(response.data);
                                           }
                                         }
 
@@ -623,33 +568,30 @@ class OrderManagementController extends GetxController {
                                         );
                                         debt.companyId = company.id;
 
-                                        order = await DatabaseHelper.create(
-                                            model: order,
-                                            tableName: Order.tableName);
+                                        final response = await _orderPocketbase.create(body: order.toDatabase);
+                                        order = Order.fromDatabase(response.data);
+
+                                        final batch = pocketbase().createBatch();
 
                                         for (final item in items) {
-                                          await DatabaseHelper.create(
-                                              model: item.copyWith(
-                                                  orderId: order.id),
-                                              tableName: OrderItem.tableName);
+                                          batch.collection(PocketbaseCollections.orderItems).create(body: item.copyWith(orderId: order.id).toDatabase);
 
-                                          if (type == OrderType.buy) {
-                                            await database.rawUpdate('''
-                                  UPDATE ${Material.tableName} SET quantity = quantity + ? WHERE id = ?
-                                  ''', [item.quantity, item.materialId]);
-                                          } else {
-                                            // it will be buy Refund
-                                            await database.rawUpdate('''
-                                  UPDATE ${Material.tableName} SET quantity = quantity - ? WHERE id = ?
-                                  ''', [item.quantity, item.materialId]);
-                                          }
+                                  //         if (type == OrderType.buy) {
+                                  //           await database.rawUpdate('''
+                                  // UPDATE ${Material.tableName} SET quantity = quantity + ? WHERE id = ?
+                                  // ''', [item.quantity, item.materialId]);
+                                  //         } else {
+                                  //           // it will be buy Refund
+                                  //           await database.rawUpdate('''
+                                  // UPDATE ${Material.tableName} SET quantity = quantity - ? WHERE id = ?
+                                  // ''', [item.quantity, item.materialId]);
+                                  //         }
                                         }
+                                        await batch.send();
 
                                         if (haveDebt.value) {
                                           debt.orderId = order.id;
-                                          await DatabaseHelper.create(
-                                              model: debt,
-                                              tableName: Debt.tableName);
+                                          _debtsPocketbase.create(body: debt.toDatabase);
                                         }
 
                                         successful = true;
@@ -677,65 +619,70 @@ class OrderManagementController extends GetxController {
       return;
     }
 
-    final database = DatabaseHelper.getDatabase();
-    final data = await database
-        .query(Material.tableName, where: 'barcode = ?', whereArgs: [barcode]);
-    if (data.isEmpty) {
+    try{
+      final response =
+          await _materialPocketbase.getList(filter: 'barcode="$barcode"', perPage: 100,);
+      final Material material;
+      if (response.items.length == 1) {
+        material = Material.fromDatabase(response.items.first.data);
+      } else {
+        final data = response.items.map((e) => e.data);
+        // this will be called when the barcode is used for more than 1 material
+        final materials = data.map((e) => Material.fromDatabase(e)).toList();
+
+        material = await Get.dialog(
+          AlertDialog.adaptive(
+            title: Text('اختر المنتج'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: materials.length,
+                itemBuilder: (context, index) => ListTile(
+                  title: Text(materials[index].name),
+                  // Material name as the title
+                  subtitle:
+                      Text('السعر: ${materials[index].price.toPriceString}'),
+                  // Material price as the description),),
+                  onTap: () => Get.back(result: materials[index]),
+                ),
+              ),
+            ),
+          ),
+          barrierDismissible: false,
+        );
+      }
+
+      beepSound();
+      final item = items
+          .where((element) => element.materialId == material.id)
+          .firstOrNull;
+      if (item == null) {
+        items.add(OrderItem(
+            materialId: material.id,
+            materialName: material.name,
+            materialUnit: material.unit,
+            price: material.price,
+            quantity: 1,
+            orderId: ''));
+      } else {
+        final index =
+            items.indexWhere((element) => element.materialId == material.id);
+        items.removeAt(index);
+        items.insert(index, item.increaseQuantity());
+      }
+      toggleAddedNewItem();
+    }catch(e, trace){
       Get.snackbar(
         'تحذير',
         'لا يوجد منتج يملك الباركود هذا',
         colorText: Colors.white,
         backgroundColor: Colors.red,
       );
+      AppLogger.exception(e, trace);
+      AppLogger.exception('the scanned barcode is $barcode and didn\'t find it');
       return;
     }
-    final Material material;
-    if (data.length == 1) {
-      material = Material.fromDatabase(data.first);
-    } else {
-      // this will be called when the barcode is used for more than 1 material
-      final materials = data.map((e) => Material.fromDatabase(e)).toList();
-
-      material = await Get.dialog(
-        AlertDialog.adaptive(
-          title: Text('اختر المنتج'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: materials.length,
-              itemBuilder: (context, index) => ListTile(
-                title:
-                    Text(materials[index].name), // Material name as the title
-                subtitle: Text(
-                    'السعر: ${materials[index].price.toPriceString}'), // Material price as the description),),
-                onTap: () => Get.back(result: materials[index]),
-              ),
-            ),
-          ),
-        ),
-        barrierDismissible: false,
-      );
-    }
-
-    beepSound();
-    final item =
-        items.where((element) => element.materialId == material.id).firstOrNull;
-    if (item == null) {
-      items.add(OrderItem(
-          materialId: material.id,
-          materialName: material.name,
-          materialUnit: material.unit,
-          price: material.price,
-          quantity: 1,
-          orderId: ''));
-    } else {
-      final index =
-          items.indexWhere((element) => element.materialId == material.id);
-      items.removeAt(index);
-      items.insert(index, item.increaseQuantity());
-    }
-    toggleAddedNewItem();
   }
 
   void removeItem(int index) => items.removeAt(index);
@@ -769,12 +716,7 @@ class OrderManagementController extends GetxController {
   );
 
   Future<void> delete() async {
-    await DatabaseHelper.delete(
-      model: order!,
-      tableName: Order.tableName,
-    );
-
-    await order!.items.delete(type);
+    await _orderPocketbase.delete(order!.id);
 
     if (debt != null) {
       await DatabaseHelper.delete(

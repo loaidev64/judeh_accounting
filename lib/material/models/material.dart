@@ -27,8 +27,8 @@ class Material extends DatabaseModel {
         id: map['id'] as String,
         name: map['name'] as String,
         quantity: double.parse(map['quantity'].toString()),
-        cost: double.parse(map['cost'].toString()),
         price: double.parse(map['price'].toString()),
+        cost: double.parse(map['cost'].toString()),
         categoryId: map['category_id'] as String, // New field
         unit: Unit.values[map['unit'] as int],
         barcode: map['barcode'] as String?, // New nullable field

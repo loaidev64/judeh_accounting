@@ -29,13 +29,13 @@ class OrderItem extends DatabaseModel {
 
   /// Factory constructor to create an [OrderItem] object from a database map.
   factory OrderItem.fromDatabase(Map<String, Object?> map) {
-    Get.printInfo(info: map.toString());
     return OrderItem(
       id: map['id'] as String,
       materialId: map['material_id'] as String,
       materialName: map['material_name'] as String?,
-      price: map['price'] as double,
-      quantity: map['quantity'] as double,
+      materialUnit: map['material_unit'] != null  ? Unit.values[map['material_unit'] as int] : null,
+      quantity: double.parse(map['quantity'].toString()),
+      price: double.parse(map['price'].toString()),
       orderId: map['order_id'] as String,
       description: map['description'] as String?,
       createdAt: DateTime.parse(map['created'] as String),
