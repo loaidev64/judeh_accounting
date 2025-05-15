@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:judeh_accounting/pocketbase/constants/pocketbase_collections.dart';
+import 'package:judeh_accounting/pocketbase/controllers/pocketbase_controller.dart';
 import 'package:judeh_accounting/shared/helpers/database_helper.dart';
 import 'package:judeh_accounting/shared/theme/app_colors.dart';
 
+import '../../pocketbase/helpers/pocketbase_helper.dart';
 import '../../shared/widgets/widgets.dart';
 import '../models/customer.dart';
 
 class CustomerController extends GetxController {
   final customers = <Customer>[].obs;
   int selectedIndex = -1;
+  
+  final _pocketbase = pocketbase().collection(PocketbaseCollections.customers);
 
   final _idTextController = TextEditingController();
   final _nameTextController = TextEditingController();
@@ -38,15 +43,21 @@ class CustomerController extends GetxController {
     super.onClose();
   }
 
+  late final Future<void> Function() unsubscribeToPolling;
+
   @override
   void onInit() async {
-    await getData();
+    await getCustomers();
+    unsubscribeToPolling = await PocketbaseHelper.polling(
+        collectionName: PocketbaseCollections.customers, onPoll: getCustomers);
     super.onInit();
   }
 
-  Future<void> getData() async {
-    final database = DatabaseHelper.getDatabase();
-    final data = await database.query(Customer.tableName, limit: 25);
+  Future<void> getCustomers() async {
+    final response = await _pocketbase.getList(
+      perPage: 25,
+    );
+    final data = response.items.map((e) => e.data);
     customers.assignAll(data.map((e) => Customer.fromDatabase(e)));
   }
 
@@ -78,7 +89,6 @@ class CustomerController extends GetxController {
       ),
       isScrollControlled: true,
     );
-    await getData();
   }
 
   Widget _buildNameAndPhoneNumberFields(Customer customer,
@@ -122,10 +132,7 @@ class CustomerController extends GetxController {
               builder: (context) {
                 return AppButton(
                   onTap: () async {
-                    await DatabaseHelper.delete(
-                      model: customer,
-                      tableName: Customer.tableName,
-                    );
+                    await _pocketbase.delete(customer.id);
                     Get.back();
                   },
                   text: 'حذف',
@@ -144,15 +151,9 @@ class CustomerController extends GetxController {
                   if (Form.of(context).validate()) {
                     Form.of(context).save();
                     if (isEditing) {
-                      await DatabaseHelper.update(
-                        model: customer,
-                        tableName: Customer.tableName,
-                      );
+                      await _pocketbase.update(customer.id, body: customer.toDatabase);
                     } else {
-                      await DatabaseHelper.create(
-                        model: customer,
-                        tableName: Customer.tableName,
-                      );
+                      await _pocketbase.create(body: customer.toDatabase);
                     }
                     Get.back();
                   }
